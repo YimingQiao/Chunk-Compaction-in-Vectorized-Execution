@@ -3,7 +3,8 @@ project(Compaction-Project)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(compaction main.cpp)
+add_executable(compaction main.cpp
+        base.h)
 
 # If you have any libraries, you can link them like this:
 # target_link_libraries(YourProjectName your_library)
