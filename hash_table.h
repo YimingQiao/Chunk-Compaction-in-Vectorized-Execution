@@ -11,33 +11,50 @@
 
 #include <list>
 #include <unordered_map>
+#include <functional>
+#include <utility>
 
 #include "base.h"
 
 namespace compaction {
-//! JoinHashTable is a linear probing HT that is used for computing joins
-/*!
-   The JoinHashTable concatenates incoming chunks inside a linked list of
-   data ptrs. The storage looks like this internally.
-   [SERIALIZED ROW][NEXT POINTER]
-   [SERIALIZED ROW][NEXT POINTER]
-   There is a separate hash map of pointers that point into this table.
-   This is what is used to resolve the hashes.
-   [POINTER]
-   [POINTER]
-   [POINTER]
-   The pointers are either NULL
-*/
-class HashTable {
+class ScanStructure {
  public:
-  HashTable(size_t n_bucket, size_t n_tuples) {
-    linked_lists_.resize(n_bucket);
-    // TODO: create a hash table, that has two functions: (1) Probe; (2) Next.
-    //  The probe is to find the bucket address for a chunk; while the Next is called to return a result data chunk.
+  explicit ScanStructure(size_t count, vector<list<Attribute> *> buckets, vector<uint32_t> sel_vector)
+      : count_(count), buckets_(std::move(buckets)), sel_vector_(std::move(sel_vector)) {
+    iterators_.resize(kBlockSize);
+    for (size_t i = 0; i < count; ++i) {
+      auto idx = sel_vector_[i];
+      iterators_[idx] = buckets_[idx]->begin();
+    }
   }
 
+  void Next(Vector &join_key, DataChunk &input, DataChunk &result);
+
+  bool HasNext() const { return count_ > 0; }
+
  private:
-  vector<list<Tuple>> linked_lists_;
-  unordered_map<Attribute, list<Tuple>> hash_map_;
+  size_t count_;
+  vector<list<Attribute> *> buckets_;
+  vector<uint32_t> sel_vector_;
+
+  vector<list<Attribute>::iterator> iterators_;
+
+  size_t ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_vector);
+
+  void AdvancePointers();
+
+  void GatherResult(Vector &column, vector<uint32_t> &sel_vector, size_t count);
+};
+
+class HashTable {
+ public:
+  HashTable(size_t n_rhs_tuples, size_t chunk_factor);
+
+  ScanStructure Probe(Vector &join_key);
+
+ private:
+  size_t n_buckets_;
+  vector<unique_ptr<list<Attribute>>> linked_lists_;
+  std::hash<Attribute> hash_;
 };
 }

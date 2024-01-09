@@ -13,6 +13,9 @@
 #include <vector>
 #include <variant>
 #include <iostream>
+#include <cassert>
+#include <list>
+#include <unordered_map>
 
 namespace compaction {
 // Some data structures
@@ -26,7 +29,7 @@ template<typename T>
 using shared_ptr = std::shared_ptr<T>;
 
 template<typename T>
-using shared_ptr = std::shared_ptr<T>;
+using unique_ptr = std::unique_ptr<T>;
 
 template<typename K, typename V>
 using unordered_map = std::unordered_map<K, V>;
@@ -46,12 +49,17 @@ enum class AttributeType : uint8_t {
 // The vector based on Row ID design.
 class Vector {
  public:
-  explicit Vector(AttributeType type) : type_(type), data_(std::make_shared<vector<Attribute>>(kBlockSize)),
+  AttributeType type_;
+  size_t count_;
+  vector<uint32_t> selection_vector_;
+
+  explicit Vector(AttributeType type) : type_(type), count_(0), data_(std::make_shared<vector<Attribute>>(kBlockSize)),
                                         selection_vector_(kBlockSize) {
     for (size_t i = 0; i < kBlockSize; ++i) selection_vector_[i] = i;
   }
 
-  void Slice(const vector<uint32_t> &selection_vector, size_t count) {
+  void Slice(vector<uint32_t> &selection_vector, size_t count) {
+    count_ = count;
     for (size_t i = 0; i < count; ++i) {
       auto new_idx = selection_vector[i];
       auto idx = selection_vector_[new_idx];
@@ -59,26 +67,63 @@ class Vector {
     }
   }
 
+  void Reference(Vector &other) {
+    assert(type_ == other.type_);
+    data_ = other.data_;
+    selection_vector_ = other.selection_vector_;
+  }
+
+  Attribute &GetValue(size_t idx) {
+    return (*data_)[idx];
+  }
+
  private:
-  AttributeType type_;
   shared_ptr<vector<Attribute>> data_;
-  vector<uint32_t> selection_vector_;
 };
 
 // A data chunk has some columns.
 class DataChunk {
  public:
-  explicit DataChunk(const vector<AttributeType> &types) : count_(0) {
+  size_t count_;
+  vector<Vector> data_;
+  vector<AttributeType> types_;
+
+  explicit DataChunk(const vector<AttributeType> &types) : count_(0), types_(types) {
     for (auto &type : types) data_.emplace_back(type);
   }
 
-  vector<Vector> data_;
- private:
-  size_t count_;
-};
+  void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count) {
+    assert(other.data_.size() <= data_.size());
+    this->count_ = count;
+    for (size_t c = 0; c < other.data_.size(); ++c) {
+      data_[c].Reference(other.data_[c]);
+      data_[c].Slice(selection_vector, count);
+    }
+  }
 
-// A tuple in hash table
-class Tuple {
-  vector<Attribute> values;
+  void Print() {
+    for (size_t i = 0; i < count_; ++i) {
+      for (size_t j = 0; j < data_.size(); ++j) {
+        size_t idx = data_[j].selection_vector_[i];
+        switch (types_[j]) {
+          case AttributeType::INTEGER: {
+            std::cout << std::get<size_t>(data_[j].GetValue(idx)) << ", ";
+            break;
+          }
+          case AttributeType::DOUBLE: {
+            std::cout << std::get<double>(data_[j].GetValue(idx)) << ", ";
+            break;
+          }
+          case AttributeType::STRING: {
+            std::cout << std::get<std::string>(data_[j].GetValue(idx)) << ", ";
+            break;
+          }
+          case AttributeType::INVALID:break;
+        }
+      }
+      std::cout << "\n";
+    }
+    std::cout << "-------------------------------\n";
+  }
 };
 }
