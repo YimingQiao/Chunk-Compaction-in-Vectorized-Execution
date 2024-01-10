@@ -4,25 +4,30 @@ namespace compaction {
 HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   n_buckets_ = 2 * n_rhs_tuples;
   linked_lists_.resize(n_buckets_);
-  for (auto &bucket : linked_lists_) bucket = std::make_unique<list<Attribute>>();
+  for (auto &bucket : linked_lists_) bucket = std::make_unique<list<Tuple>>();
 
-  // join key
-  vector<size_t> column(n_rhs_tuples);
+  // Tuple in Hash Table
+  string payload_name = "payload_0x" + std::to_string(size_t(this)) + "_";
+  vector<Tuple> rhs_table(n_rhs_tuples);
   for (size_t i = 0; i < n_rhs_tuples; ++i) {
-    column[i] = i * chunk_factor % n_rhs_tuples;
+    auto key = i * chunk_factor % n_rhs_tuples;
+    auto payload = payload_name + std::to_string(i);
+    rhs_table[i].attrs_.emplace_back(key);
+    rhs_table[i].attrs_.emplace_back(payload);
   }
 
   // build hash table
   for (size_t i = 0; i < n_rhs_tuples; ++i) {
-    Attribute value = column[i];
+    auto &tuple = rhs_table[i];
+    Attribute value = tuple.attrs_[0];
     auto bucket_idx = hash_(value) % n_buckets_;
     auto &bucket = linked_lists_[bucket_idx];
-    bucket->push_back(value);
+    bucket->push_back(tuple);
   }
 }
 
 ScanStructure HashTable::Probe(Vector &join_key) {
-  vector<list<Attribute> *> ptrs(join_key.selection_vector_.size());
+  vector<list<Tuple> *> ptrs(join_key.selection_vector_.size());
   for (size_t i = 0; i < join_key.count_; ++i) {
     auto idx = join_key.selection_vector_[i];
     auto attr = join_key.GetValue(idx);
@@ -71,20 +76,15 @@ size_t ScanStructure::ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_v
     result_vector = sel_vector_;
     for (size_t i = 0; i < count_; ++i) {
       auto idx = result_vector[i];
-      if (join_key.GetValue(idx) == *iterators_[idx]) {
-        result_vector[result_count++] = idx;
-      }
+      auto &key = iterators_[idx]->attrs_[0];
+      if (join_key.GetValue(idx) == key) result_vector[result_count++] = idx;
     }
 
-    if (result_count > 0) {
-      return result_count;
-    }
+    if (result_count > 0) return result_count;
 
     // no matches found: check the next set of pointers
     AdvancePointers();
-    if (count_ == 0) {
-      return 0;
-    }
+    if (count_ == 0) return 0;
   }
 }
 
@@ -92,18 +92,18 @@ void ScanStructure::AdvancePointers() {
   size_t new_count = 0;
   for (size_t i = 0; i < count_; i++) {
     auto idx = sel_vector_[i];
-    if (++iterators_[idx] != buckets_[idx]->end()) {
-      sel_vector_[new_count++] = idx;
-    }
+    if (++iterators_[idx] != buckets_[idx]->end()) sel_vector_[new_count++] = idx;
   }
   count_ = new_count;
 }
 
 void ScanStructure::GatherResult(Vector &column, vector<uint32_t> &sel_vector, size_t count) {
   column.count_ = count;
+  column.selection_vector_ = sel_vector;
   for (size_t i = 0; i < count; ++i) {
     auto idx = sel_vector[i];
-    column.GetValue(i) = *iterators_[idx];
+    auto &value = iterators_[idx]->attrs_[1];
+    column.GetValue(idx) = value;
   }
 }
 }

@@ -19,26 +19,19 @@
 
 namespace compaction {
 // Some data structures
-template<typename T>
-using vector = std::vector<T>;
-
-template<typename T>
-using list = std::list<T>;
-
-template<typename T>
-using shared_ptr = std::shared_ptr<T>;
-
-template<typename T>
-using unique_ptr = std::unique_ptr<T>;
-
-template<typename K, typename V>
-using unordered_map = std::unordered_map<K, V>;
+using std::vector;
+using std::list;
+using std::shared_ptr;
+using std::unique_ptr;
+using std::unordered_map;
+using std::string;
 
 // Each block here is 2048
 constexpr size_t kBlockSize = 2048;
 
 // Attribute includes three types: integer, float-point number, and the string.
 using Attribute = std::variant<size_t, double, std::string>;
+
 enum class AttributeType : uint8_t {
   INTEGER = 0,
   DOUBLE = 1,
@@ -46,7 +39,7 @@ enum class AttributeType : uint8_t {
   INVALID = 3
 };
 
-// The vector based on Row ID design.
+// The vector uses Row ID.
 class Vector {
  public:
   AttributeType type_;
@@ -92,7 +85,15 @@ class DataChunk {
     for (auto &type : types) data_.emplace_back(type);
   }
 
-  void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count) {
+  inline void AppendTuple(vector<Attribute> &tuple) {
+    for (size_t i = 0; i < types_.size(); ++i) {
+      auto &col = data_[i];
+      col.GetValue(col.count_++) = tuple[i];
+    }
+    ++count_;
+  }
+
+  inline void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count) {
     assert(other.data_.size() <= data_.size());
     this->count_ = count;
     for (size_t c = 0; c < other.data_.size(); ++c) {

@@ -17,9 +17,13 @@
 #include "base.h"
 
 namespace compaction {
+struct Tuple {
+  vector<Attribute> attrs_;
+};
+
 class ScanStructure {
  public:
-  explicit ScanStructure(size_t count, vector<list<Attribute> *> buckets, vector<uint32_t> sel_vector)
+  explicit ScanStructure(size_t count, vector<list<Tuple> *> buckets, vector<uint32_t> sel_vector)
       : count_(count), buckets_(std::move(buckets)), sel_vector_(std::move(sel_vector)) {
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
@@ -34,16 +38,16 @@ class ScanStructure {
 
  private:
   size_t count_;
-  vector<list<Attribute> *> buckets_;
+  vector<list<Tuple> *> buckets_;
   vector<uint32_t> sel_vector_;
 
-  vector<list<Attribute>::iterator> iterators_;
+  vector<list<Tuple>::iterator> iterators_;
 
   size_t ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_vector);
 
-  void AdvancePointers();
+  inline void AdvancePointers();
 
-  void GatherResult(Vector &column, vector<uint32_t> &sel_vector, size_t count);
+  inline void GatherResult(Vector &column, vector<uint32_t> &sel_vector, size_t count);
 };
 
 class HashTable {
@@ -54,7 +58,7 @@ class HashTable {
 
  private:
   size_t n_buckets_;
-  vector<unique_ptr<list<Attribute>>> linked_lists_;
+  vector<unique_ptr<list<Tuple>>> linked_lists_;
   std::hash<Attribute> hash_;
 };
 }
