@@ -7,9 +7,9 @@
 
 using namespace compaction;
 
-const size_t kLHSTupleSize = 8;
-const size_t kRHSTupleSize = 8;
-const size_t kChunkFactor = 2;
+const size_t kLHSTupleSize = 32000;
+const size_t kRHSTupleSize = 32000;
+const size_t kChunkFactor = 3;
 
 int main() {
   // random generator
@@ -19,27 +19,28 @@ int main() {
   std::uniform_int_distribution<> course_id_dist(0, kRHSTupleSize);
   std::uniform_int_distribution<> major_id_dist(0, kRHSTupleSize);
 
-  // create probe table: (id, course_id, major_id, age, name)
+  // create probe table: (id, course_id, major_id, miscellaneous)
   vector<AttributeType> types
-      {AttributeType::INTEGER, AttributeType::INTEGER, AttributeType::INTEGER,
-       AttributeType::INTEGER, AttributeType::STRING};
+      {AttributeType::INTEGER, AttributeType::INTEGER, AttributeType::INTEGER, AttributeType::STRING};
   compaction::DataCollection table(types);
   for (size_t i = 0; i < kLHSTupleSize; ++i) {
-    std::vector<compaction::Attribute> tuple{i, size_t(course_id_dist(gen)), size_t(major_id_dist(gen)),
-                                             size_t(age_dist(gen)), "name_" + std::to_string(i)};
+    std::vector<compaction::Attribute> tuple{i, size_t(course_id_dist(gen)), size_t(major_id_dist(gen)), "|"};
     table.AppendTuple(tuple);
   }
 
   // create rhs hash table, and the result_table chunk
   HashTable ht_1(kRHSTupleSize, kChunkFactor);
+  types.push_back(AttributeType::INTEGER);
   types.push_back(AttributeType::STRING);
   DataChunk result_chunk_1(types);
 
   HashTable ht_2(kRHSTupleSize, kChunkFactor);
+  types.push_back(AttributeType::INTEGER);
   types.push_back(AttributeType::STRING);
   DataChunk result_chunk_2(types);
 
   HashTable ht_3(kRHSTupleSize, kChunkFactor);
+  types.push_back(AttributeType::INTEGER);
   types.push_back(AttributeType::STRING);
   DataChunk result_chunk_3(types);
 
@@ -79,7 +80,8 @@ int main() {
   } while (end < kLHSTupleSize);
 
   // show the joined result.
-  result_table.Print();
+  std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
+  result_table.Print(10);
 
   return 0;
 }

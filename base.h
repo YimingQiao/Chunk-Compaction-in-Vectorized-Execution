@@ -55,8 +55,8 @@ class Vector {
     count_ = count;
     for (size_t i = 0; i < count; ++i) {
       auto new_idx = selection_vector[i];
-      auto idx = selection_vector_[new_idx];
-      selection_vector_[i] = idx;
+      auto key_idx = selection_vector_[new_idx];
+      selection_vector_[i] = key_idx;
     }
   }
 

@@ -11,7 +11,7 @@ HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   vector<Tuple> rhs_table(n_rhs_tuples);
   for (size_t i = 0; i < n_rhs_tuples; ++i) {
     auto key = i * chunk_factor % n_rhs_tuples;
-    auto payload = payload_name + std::to_string(i);
+    auto payload = payload_name + std::to_string(i) + "|";
     rhs_table[i].attrs_.emplace_back(key);
     rhs_table[i].attrs_.emplace_back(payload);
   }
@@ -39,12 +39,9 @@ ScanStructure HashTable::Probe(Vector &join_key) {
   vector<uint32_t> selection_vector(kBlockSize);
   for (size_t i = 0; i < join_key.count_; ++i) {
     auto idx = join_key.selection_vector_[i];
-    if (!ptrs[idx]->empty()) {
-      selection_vector[n_non_empty] = idx;
-      ++n_non_empty;
-    }
+    if (!ptrs[idx]->empty()) selection_vector[n_non_empty++] = i;
   }
-  return ScanStructure(n_non_empty, ptrs, selection_vector);
+  return ScanStructure(n_non_empty, selection_vector, ptrs, join_key.selection_vector_);
 }
 
 void ScanStructure::Next(Vector &join_key, DataChunk &input, DataChunk &result) {
@@ -63,8 +60,8 @@ void ScanStructure::Next(Vector &join_key, DataChunk &input, DataChunk &result) 
     result.Slice(input, result_vector, result_count);
 
     // on the RHS, we need to fetch the data from the hash table
-    auto &vector = result.data_[input.data_.size()];
-    GatherResult(vector, result_vector, result_count);
+    vector<Vector *> cols{&result.data_[input.data_.size()], &result.data_[input.data_.size() + 1]};
+    GatherResult(cols, result_vector, result_count);
   }
   AdvancePointers();
 }
@@ -75,9 +72,11 @@ size_t ScanStructure::ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_v
     size_t result_count = 0;
     result_vector = sel_vector_;
     for (size_t i = 0; i < count_; ++i) {
-      auto idx = result_vector[i];
-      auto &key = iterators_[idx]->attrs_[0];
-      if (join_key.GetValue(idx) == key) result_vector[result_count++] = idx;
+      size_t idx = result_vector[i];
+      size_t key_idx = key_format_[idx];
+      auto &l_key = join_key.GetValue(key_idx);
+      auto &r_key = iterators_[key_idx]->attrs_[0];
+      if (l_key == r_key) result_vector[result_count++] = idx;
     }
 
     if (result_count > 0) return result_count;
@@ -92,18 +91,21 @@ void ScanStructure::AdvancePointers() {
   size_t new_count = 0;
   for (size_t i = 0; i < count_; i++) {
     auto idx = sel_vector_[i];
-    if (++iterators_[idx] != buckets_[idx]->end()) sel_vector_[new_count++] = idx;
+    auto key_idx = key_format_[idx];
+    if (++iterators_[key_idx] != buckets_[key_idx]->end()) sel_vector_[new_count++] = idx;
   }
   count_ = new_count;
 }
 
-void ScanStructure::GatherResult(Vector &column, vector<uint32_t> &sel_vector, size_t count) {
-  column.count_ = count;
-  column.selection_vector_ = sel_vector;
-  for (size_t i = 0; i < count; ++i) {
-    auto idx = sel_vector[i];
-    auto &value = iterators_[idx]->attrs_[1];
-    column.GetValue(idx) = value;
+void ScanStructure::GatherResult(vector<Vector *> cols, vector<uint32_t> &sel_vector, size_t count) {
+  for (size_t c = 0; c < cols.size(); ++c) {
+    auto &col = *cols[c];
+    col.count_ = count;
+    for (size_t i = 0; i < count; ++i) {
+      auto idx = sel_vector[i];
+      auto key_idx = key_format_[idx];
+      col.GetValue(i) = iterators_[key_idx]->attrs_[c];
+    }
   }
 }
 }

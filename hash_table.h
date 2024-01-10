@@ -23,12 +23,17 @@ struct Tuple {
 
 class ScanStructure {
  public:
-  explicit ScanStructure(size_t count, vector<list<Tuple> *> buckets, vector<uint32_t> sel_vector)
-      : count_(count), buckets_(std::move(buckets)), sel_vector_(std::move(sel_vector)) {
+  explicit ScanStructure(size_t count,
+                         vector<uint32_t> sel_vector,
+                         vector<list<Tuple> *> buckets,
+                         vector<uint32_t> &key_format)
+      : count_(count), buckets_(std::move(buckets)), sel_vector_(std::move(sel_vector)), key_format_(key_format) {
+    auto &key_sel_vector = key_format;
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
-      auto idx = sel_vector_[i];
-      iterators_[idx] = buckets_[idx]->begin();
+      size_t idx = sel_vector_[i];
+      size_t idx_key = key_sel_vector[idx];
+      iterators_[idx_key] = buckets_[idx_key]->begin();
     }
   }
 
@@ -40,14 +45,14 @@ class ScanStructure {
   size_t count_;
   vector<list<Tuple> *> buckets_;
   vector<uint32_t> sel_vector_;
-
+  vector<uint32_t> key_format_;
   vector<list<Tuple>::iterator> iterators_;
 
   size_t ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_vector);
 
   inline void AdvancePointers();
 
-  inline void GatherResult(Vector &column, vector<uint32_t> &sel_vector, size_t count);
+  inline void GatherResult(vector<Vector *> cols, vector<uint32_t> &sel_vector, size_t count);
 };
 
 class HashTable {
