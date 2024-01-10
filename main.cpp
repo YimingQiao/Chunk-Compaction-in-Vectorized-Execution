@@ -4,6 +4,7 @@
 #include "base.h"
 #include "hash_table.h"
 #include "data_collection.h"
+#include "profiler.h"
 
 using namespace compaction;
 
@@ -55,19 +56,21 @@ int main() {
     DataChunk chunk = table.FetchChunk(start, end);
     start = end;
 
-    // start probe
+    // Join: 1
     Vector &join_key = chunk.data_[0];
     auto ss = ht_1.Probe(join_key);
 
     while (ss.HasNext()) {
       ss.Next(join_key, chunk, result_chunk_1);
 
+      // Join: 2
       Vector &join_key = result_chunk_1.data_[1];
       auto ss = ht_2.Probe(join_key);
 
       while (ss.HasNext()) {
         ss.Next(join_key, result_chunk_1, result_chunk_2);
 
+        // Join: 3
         Vector &join_key = result_chunk_2.data_[2];
         auto ss = ht_3.Probe(join_key);
 
