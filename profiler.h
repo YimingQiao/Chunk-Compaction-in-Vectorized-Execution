@@ -254,6 +254,9 @@ class ZebraProfiler {
   }
 
  private:
+  ZebraProfiler() : gen_(rd()) {
+  }
+
   inline size_t RandomInteger() {
     return integers(gen_);
   }
@@ -270,6 +273,7 @@ class ZebraProfiler {
   unordered_map<string, Histogram> hists_;
 
   // random
+  std::random_device rd;
   std::mt19937 gen_;
   std::uniform_int_distribution<int> integers;
 };

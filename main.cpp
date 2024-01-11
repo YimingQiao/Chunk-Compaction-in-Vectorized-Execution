@@ -51,10 +51,12 @@ int main() {
     profiler.Start();
 
     // Start process each chunk in the lhs table
+    size_t num_chunk_size = 1;
     size_t start = 0;
     size_t end;
     do {
-      end = std::min(start + kBlockSize, kLHSTupleSize);
+      end = std::min(start + num_chunk_size, kLHSTupleSize);
+      num_chunk_size = (num_chunk_size + 1) % kBlockSize;
       DataChunk chunk = table.FetchChunk(start, end);
       start = end;
 
