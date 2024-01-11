@@ -7,14 +7,14 @@
 #include "profiler.h"
 #include "compactor.h"
 
-#define COMPACT
+//#define COMPACT
 
 using namespace compaction;
 
 const size_t kJoins = 3;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 1;
+const size_t kChunkFactor = 8;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -31,7 +31,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
-    result_table.AppendChunk(input);
+    // result_table.AppendChunk(input);
     return;
   }
 
@@ -115,7 +115,7 @@ int main() {
     size_t end;
     do {
       end = std::min(start + num_chunk_size, kLHSTupleSize);
-      // num_chunk_size = (num_chunk_size + 1) % kBlockSize;
+      num_chunk_size = (num_chunk_size + 1) % kBlockSize;
       DataChunk chunk = table.FetchChunk(start, end);
       start = end;
 

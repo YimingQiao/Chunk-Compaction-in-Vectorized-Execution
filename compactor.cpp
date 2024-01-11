@@ -3,7 +3,7 @@
 
 namespace compaction {
 void NaiveCompactor::Compact(unique_ptr<DataChunk> &chunk) {
-  if (chunk->count_ == kBlockSize) return;
+//  if (chunk->count_ == kBlockSize) return;
 
   const string name = "0x" + std::to_string(size_t(this));
   Profiler profiler;
