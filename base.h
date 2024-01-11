@@ -46,25 +46,13 @@ class Vector {
   size_t count_;
   vector<uint32_t> selection_vector_;
 
-  explicit Vector(AttributeType type) : type_(type), count_(0), data_(std::make_shared<vector<Attribute>>(kBlockSize)),
-                                        selection_vector_(kBlockSize) {
-    for (size_t i = 0; i < kBlockSize; ++i) selection_vector_[i] = i;
-  }
+  explicit Vector(AttributeType type);
 
-  void Slice(vector<uint32_t> &selection_vector, size_t count) {
-    count_ = count;
-    for (size_t i = 0; i < count; ++i) {
-      auto new_idx = selection_vector[i];
-      auto key_idx = selection_vector_[new_idx];
-      selection_vector_[i] = key_idx;
-    }
-  }
+  inline void Append(Vector &other, size_t num, size_t offset = 0);
 
-  void Reference(Vector &other) {
-    assert(type_ == other.type_);
-    data_ = other.data_;
-    selection_vector_ = other.selection_vector_;
-  }
+  inline void Slice(vector<uint32_t> &selection_vector, size_t count);
+
+  inline void Reference(Vector &other);
 
   Attribute &GetValue(size_t idx) {
     return (*data_)[idx];
@@ -81,50 +69,19 @@ class DataChunk {
   vector<Vector> data_;
   vector<AttributeType> types_;
 
-  explicit DataChunk(const vector<AttributeType> &types) : count_(0), types_(types) {
-    for (auto &type : types) data_.emplace_back(type);
+  explicit DataChunk(const vector<AttributeType> &types);
+
+  void Append(DataChunk &chunk, size_t num, size_t offset = 0);
+
+  void AppendTuple(vector<Attribute> &tuple);
+
+  void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count);
+
+  void Move(DataChunk& other){
+    count_ = other.count_;
+    data_ = std::move(other.data_);
   }
 
-  inline void AppendTuple(vector<Attribute> &tuple) {
-    for (size_t i = 0; i < types_.size(); ++i) {
-      auto &col = data_[i];
-      col.GetValue(col.count_++) = tuple[i];
-    }
-    ++count_;
-  }
-
-  inline void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count) {
-    assert(other.data_.size() <= data_.size());
-    this->count_ = count;
-    for (size_t c = 0; c < other.data_.size(); ++c) {
-      data_[c].Reference(other.data_[c]);
-      data_[c].Slice(selection_vector, count);
-    }
-  }
-
-  void Print() {
-    for (size_t i = 0; i < count_; ++i) {
-      for (size_t j = 0; j < data_.size(); ++j) {
-        size_t idx = data_[j].selection_vector_[i];
-        switch (types_[j]) {
-          case AttributeType::INTEGER: {
-            std::cout << std::get<size_t>(data_[j].GetValue(idx)) << ", ";
-            break;
-          }
-          case AttributeType::DOUBLE: {
-            std::cout << std::get<double>(data_[j].GetValue(idx)) << ", ";
-            break;
-          }
-          case AttributeType::STRING: {
-            std::cout << std::get<std::string>(data_[j].GetValue(idx)) << ", ";
-            break;
-          }
-          case AttributeType::INVALID:break;
-        }
-      }
-      std::cout << "\n";
-    }
-    std::cout << "-------------------------------\n";
-  }
+  void Print();
 };
 }

@@ -15,6 +15,7 @@
 #include <mutex>
 #include <atomic>
 #include <chrono>
+#include <algorithm>
 
 namespace compaction {
 using std::mutex;

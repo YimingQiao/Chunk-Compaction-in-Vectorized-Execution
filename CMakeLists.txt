@@ -4,10 +4,11 @@ project(Compaction-Project)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(compaction main.cpp
-        base.h
+        profiler.h
+        base.cpp
         hash_table.cpp
         data_collection.cpp
-        profiler.h)
+        compactor.cpp)
 
 # If you have any libraries, you can link them like this:
 # target_link_libraries(YourProjectName your_library)
