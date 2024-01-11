@@ -7,7 +7,8 @@ HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   for (auto &bucket : linked_lists_) bucket = std::make_unique<list<Tuple>>();
 
   // Tuple in Hash Table
-  string payload_name = "payload_0x" + std::to_string(size_t(this)) + "_";
+  // string payload_name = "payload_0x" + std::to_string(size_t(this)) + "_";
+  string payload_name = "_";
   vector<Tuple> rhs_table(n_rhs_tuples);
   for (size_t i = 0; i < n_rhs_tuples; ++i) {
     auto key = i * chunk_factor % n_rhs_tuples;
@@ -27,6 +28,9 @@ HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
 }
 
 ScanStructure HashTable::Probe(Vector &join_key) {
+  Profiler profiler;
+  profiler.Start();
+
   vector<list<Tuple> *> ptrs(join_key.selection_vector_.size());
   for (size_t i = 0; i < join_key.count_; ++i) {
     auto idx = join_key.selection_vector_[i];
@@ -41,7 +45,13 @@ ScanStructure HashTable::Probe(Vector &join_key) {
     auto idx = join_key.selection_vector_[i];
     if (!ptrs[idx]->empty()) selection_vector[n_non_empty++] = i;
   }
-  return ScanStructure(n_non_empty, selection_vector, ptrs, join_key.selection_vector_);
+  auto ret = ScanStructure(n_non_empty, selection_vector, ptrs, join_key.selection_vector_, this);
+
+  double time = profiler.Elapsed();
+  BeeProfiler::Get().InsertStatRecord("[Join - Probe] 0x" + std::to_string(size_t(this)), time);
+  ZebraProfiler::Get().InsertRecord("[Join - Probe] 0x" + std::to_string(size_t(this)), join_key.count_,
+                                    time);
+  return ret;
 }
 
 void ScanStructure::Next(Vector &join_key, DataChunk &input, DataChunk &result) {
@@ -49,6 +59,9 @@ void ScanStructure::Next(Vector &join_key, DataChunk &input, DataChunk &result) 
     // no pointers left to chase
     return;
   }
+
+  Profiler profiler;
+  profiler.Start();
 
   vector<uint32_t> result_vector(kBlockSize);
   size_t result_count = ScanInnerJoin(join_key, result_vector);
@@ -64,6 +77,10 @@ void ScanStructure::Next(Vector &join_key, DataChunk &input, DataChunk &result) 
     GatherResult(cols, result_vector, result_count);
   }
   AdvancePointers();
+
+  double time = profiler.Elapsed();
+  BeeProfiler::Get().InsertStatRecord("[Join - Next] 0x" + std::to_string(size_t(ht_)), time);
+  ZebraProfiler::Get().InsertRecord("[Join - Next] 0x" + std::to_string(size_t(ht_)), join_key.count_, time);
 }
 
 size_t ScanStructure::ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_vector) {

@@ -15,8 +15,12 @@
 #include <utility>
 
 #include "base.h"
+#include "profiler.h"
 
 namespace compaction {
+
+class HashTable;
+
 struct Tuple {
   vector<Attribute> attrs_;
 };
@@ -26,8 +30,10 @@ class ScanStructure {
   explicit ScanStructure(size_t count,
                          vector<uint32_t> sel_vector,
                          vector<list<Tuple> *> buckets,
-                         vector<uint32_t> &key_format)
-      : count_(count), buckets_(std::move(buckets)), sel_vector_(std::move(sel_vector)), key_format_(key_format) {
+                         vector<uint32_t> &key_format,
+                         HashTable *ht)
+      : count_(count), buckets_(std::move(buckets)),
+        sel_vector_(std::move(sel_vector)), key_format_(key_format), ht_(ht) {
     auto &key_sel_vector = key_format;
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
@@ -47,6 +53,7 @@ class ScanStructure {
   vector<uint32_t> sel_vector_;
   vector<uint32_t> key_format_;
   vector<list<Tuple>::iterator> iterators_;
+  HashTable *ht_;
 
   size_t ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_vector);
 
