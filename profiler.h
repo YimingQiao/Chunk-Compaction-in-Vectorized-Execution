@@ -178,7 +178,7 @@ class BeeProfiler {
 
 class ZebraProfiler {
  public:
-  const static bool kEnableProfiling = false;
+  const static bool kEnableProfiling = true;
 
  public:
   static ZebraProfiler &Get() {
