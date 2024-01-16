@@ -31,7 +31,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
-    // result_table.AppendChunk(input);
+    result_table.AppendChunk(input);
     return;
   }
 
@@ -39,7 +39,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
   auto &result = intermediates[level];
   auto &compactor = compactors[level];
 
-  auto ss = hts[level]->Probe(join_key);
+  auto ss = hts[level]->Probe(join_key, input.count_, input.selection_vector_);
   while (ss.HasNext()) {
     ss.Next(join_key, input, *result);
 
@@ -136,7 +136,7 @@ int main() {
 
   // show the joined result.
   std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
-  result_table.Print(10);
+  result_table.Print(256);
 
   return 0;
 }

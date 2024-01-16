@@ -33,11 +33,11 @@ class ScanStructure {
                          vector<uint32_t> &key_format,
                          HashTable *ht)
       : count_(count), buckets_(std::move(buckets)),
-        sel_vector_(std::move(sel_vector)), key_format_(key_format), ht_(ht) {
+        bucket_sel_vector_(std::move(sel_vector)), bucket_format_(key_format), ht_(ht) {
     auto &key_sel_vector = key_format;
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
-      size_t idx = sel_vector_[i];
+      size_t idx = bucket_sel_vector_[i];
       size_t idx_key = key_sel_vector[idx];
       iterators_[idx_key] = buckets_[idx_key]->begin();
     }
@@ -50,8 +50,8 @@ class ScanStructure {
  private:
   size_t count_;
   vector<list<Tuple> *> buckets_;
-  vector<uint32_t> sel_vector_;
-  vector<uint32_t> key_format_;
+  vector<uint32_t> bucket_sel_vector_;
+  vector<uint32_t> bucket_format_;
   vector<list<Tuple>::iterator> iterators_;
   HashTable *ht_;
 
@@ -59,14 +59,17 @@ class ScanStructure {
 
   inline void AdvancePointers();
 
-  inline void GatherResult(vector<Vector *> cols, vector<uint32_t> &sel_vector, size_t count);
+  inline void GatherResult(vector<Vector *> cols,
+                           vector<uint32_t> &sel_vector,
+                           vector<uint32_t> &result_vector,
+                           size_t count);
 };
 
 class HashTable {
  public:
   HashTable(size_t n_rhs_tuples, size_t chunk_factor);
 
-  ScanStructure Probe(Vector &join_key);
+  ScanStructure Probe(Vector &join_key, size_t count, vector<uint32_t> sel_vector);
 
  private:
   size_t n_buckets_;

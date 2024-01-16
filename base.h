@@ -43,14 +43,8 @@ enum class AttributeType : uint8_t {
 class Vector {
  public:
   AttributeType type_;
-  size_t count_;
-  vector<uint32_t> selection_vector_;
 
-  explicit Vector(AttributeType type);
-
-  inline void Append(Vector &other, size_t num, size_t offset = 0);
-
-  inline void Slice(vector<uint32_t> &selection_vector, size_t count);
+  explicit Vector(AttributeType type) : type_(type), data_(std::make_shared<vector<Attribute>>(kBlockSize)) {}
 
   inline void Reference(Vector &other);
 
@@ -68,6 +62,7 @@ class DataChunk {
   size_t count_;
   vector<Vector> data_;
   vector<AttributeType> types_;
+  vector<uint32_t> selection_vector_;
 
   explicit DataChunk(const vector<AttributeType> &types);
 
@@ -77,7 +72,7 @@ class DataChunk {
 
   void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count);
 
-  void Move(DataChunk& other){
+  void Move(DataChunk &other) {
     count_ = other.count_;
     data_ = std::move(other.data_);
   }
