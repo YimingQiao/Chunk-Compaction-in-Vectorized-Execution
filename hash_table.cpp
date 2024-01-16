@@ -27,7 +27,7 @@ HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   }
 }
 
-ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t> sel_vector) {
+ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t>& sel_vector) {
   Profiler profiler;
   profiler.Start();
 

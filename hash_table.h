@@ -51,7 +51,7 @@ class ScanStructure {
   size_t count_;
   vector<list<Tuple> *> buckets_;
   vector<uint32_t> bucket_sel_vector_;
-  vector<uint32_t> bucket_format_;
+  vector<uint32_t> &bucket_format_;
   vector<list<Tuple>::iterator> iterators_;
   HashTable *ht_;
 
@@ -69,7 +69,7 @@ class HashTable {
  public:
   HashTable(size_t n_rhs_tuples, size_t chunk_factor);
 
-  ScanStructure Probe(Vector &join_key, size_t count, vector<uint32_t> sel_vector);
+  ScanStructure Probe(Vector &join_key, size_t count, vector<uint32_t> &sel_vector);
 
  private:
   size_t n_buckets_;

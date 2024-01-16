@@ -14,7 +14,7 @@ using namespace compaction;
 const size_t kJoins = 3;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 1;
+const size_t kChunkFactor = 16;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -31,7 +31,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
-    result_table.AppendChunk(input);
+    // result_table.AppendChunk(input);
     return;
   }
 
@@ -77,7 +77,7 @@ void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size
 int main() {
   // random generator
   std::random_device rd;
-  std::mt19937 gen(0);
+  std::mt19937 gen(1);
   std::uniform_int_distribution<> dist(0, kRHSTupleSize);
 
   // create probe table: (id, course_id, major_id, miscellaneous)
@@ -136,7 +136,7 @@ int main() {
 
   // show the joined result.
   std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
-  result_table.Print(256);
+  result_table.Print(8);
 
   return 0;
 }
