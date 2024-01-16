@@ -27,11 +27,11 @@ HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   }
 }
 
-ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t>& sel_vector) {
+ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t> &sel_vector) {
   Profiler profiler;
   profiler.Start();
 
-  vector<list<Tuple> *> ptrs(sel_vector.size());
+  vector<list<Tuple> *> ptrs(kBlockSize);
   for (size_t i = 0; i < count; ++i) {
     auto idx = sel_vector[i];
     auto attr = join_key.GetValue(idx);
@@ -40,12 +40,12 @@ ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t>&
   }
 
   size_t n_non_empty = 0;
-  vector<uint32_t> selection_vector(kBlockSize);
+  vector<uint32_t> ptrs_sel_vector(kBlockSize);
   for (size_t i = 0; i < count; ++i) {
     auto idx = sel_vector[i];
-    if (!ptrs[idx]->empty()) selection_vector[n_non_empty++] = i;
+    if (!ptrs[idx]->empty()) ptrs_sel_vector[n_non_empty++] = i;
   }
-  auto ret = ScanStructure(n_non_empty, selection_vector, ptrs, sel_vector, this);
+  auto ret = ScanStructure(n_non_empty, ptrs_sel_vector, ptrs, sel_vector, this);
 
   double time = profiler.Elapsed();
   BeeProfiler::Get().InsertStatRecord("[Join - Probe] 0x" + std::to_string(size_t(this)), time);

@@ -105,12 +105,11 @@ int main() {
   // create the result_table collection
   DataCollection result_table(types);
 
+  double latency = 0;
+  Profiler timer;
   {
-    Profiler profiler;
-    profiler.Start();
-
     // Start process each chunk in the lhs table
-    size_t num_chunk_size = kBlockSize;
+    size_t num_chunk_size = 1;
     size_t start = 0;
     size_t end;
     do {
@@ -119,15 +118,20 @@ int main() {
       DataChunk chunk = table.FetchChunk(start, end);
       start = end;
 
+      timer.Start();
       ExecutePipeline(chunk, state, result_table, 0);
+      latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
 #ifdef COMPACT
-    // Flush the tuples in cache.
-    FlushPipelineCache(state, result_table, 0);
+    timer.Start();
+    {
+      // Flush the tuples in cache.
+      FlushPipelineCache(state, result_table, 0);
+    }
+    latency += timer.Elapsed();
 #endif
 
-    double latency = profiler.Elapsed();
     std::cout << "[Total Time]: " << latency << "s\n";
   }
 

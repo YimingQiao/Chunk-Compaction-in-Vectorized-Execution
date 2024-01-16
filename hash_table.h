@@ -28,12 +28,12 @@ struct Tuple {
 class ScanStructure {
  public:
   explicit ScanStructure(size_t count,
-                         vector<uint32_t> sel_vector,
+                         vector<uint32_t> bucket_sel_vector,
                          vector<list<Tuple> *> buckets,
                          vector<uint32_t> &key_format,
                          HashTable *ht)
       : count_(count), buckets_(std::move(buckets)),
-        bucket_sel_vector_(std::move(sel_vector)), bucket_format_(key_format), ht_(ht) {
+        bucket_sel_vector_(std::move(bucket_sel_vector)), bucket_format_(key_format), ht_(ht) {
     auto &key_sel_vector = key_format;
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
