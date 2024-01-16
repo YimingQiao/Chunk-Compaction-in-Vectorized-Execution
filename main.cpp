@@ -7,14 +7,14 @@
 #include "profiler.h"
 #include "compactor.h"
 
-//#define COMPACT
+#define COMPACT
 
 using namespace compaction;
 
 const size_t kJoins = 3;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 16;
+const size_t kChunkFactor = 1;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
