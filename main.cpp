@@ -7,14 +7,14 @@
 #include "profiler.h"
 #include "compactor.h"
 
-//#define COMPACT
+#define COMPACT
 
 using namespace compaction;
 
 const size_t kJoins = 3;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 8;
+const size_t kChunkFactor = 1;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -31,7 +31,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
-    // result_table.AppendChunk(input);
+    result_table.AppendChunk(input);
     return;
   }
 
@@ -39,7 +39,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
   auto &result = intermediates[level];
   auto &compactor = compactors[level];
 
-  auto ss = hts[level]->Probe(join_key);
+  auto ss = hts[level]->Probe(join_key, input.count_, input.selection_vector_);
   while (ss.HasNext()) {
     ss.Next(join_key, input, *result);
 
@@ -77,7 +77,7 @@ void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size
 int main() {
   // random generator
   std::random_device rd;
-  std::mt19937 gen(0);
+  std::mt19937 gen(1);
   std::uniform_int_distribution<> dist(0, kRHSTupleSize);
 
   // create probe table: (id, course_id, major_id, miscellaneous)
@@ -105,12 +105,11 @@ int main() {
   // create the result_table collection
   DataCollection result_table(types);
 
+  double latency = 0;
+  Profiler timer;
   {
-    Profiler profiler;
-    profiler.Start();
-
     // Start process each chunk in the lhs table
-    size_t num_chunk_size = kBlockSize;
+    size_t num_chunk_size = 1;
     size_t start = 0;
     size_t end;
     do {
@@ -119,15 +118,20 @@ int main() {
       DataChunk chunk = table.FetchChunk(start, end);
       start = end;
 
+      timer.Start();
       ExecutePipeline(chunk, state, result_table, 0);
+      latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
 #ifdef COMPACT
-    // Flush the tuples in cache.
-    FlushPipelineCache(state, result_table, 0);
+    timer.Start();
+    {
+      // Flush the tuples in cache.
+      FlushPipelineCache(state, result_table, 0);
+    }
+    latency += timer.Elapsed();
 #endif
 
-    double latency = profiler.Elapsed();
     std::cout << "[Total Time]: " << latency << "s\n";
   }
 
@@ -136,7 +140,7 @@ int main() {
 
   // show the joined result.
   std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
-  result_table.Print(10);
+  result_table.Print(8);
 
   return 0;
 }

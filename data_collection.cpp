@@ -9,15 +9,15 @@ void compaction::DataCollection::AppendTuple(std::vector<compaction::Attribute> 
 
 void compaction::DataCollection::AppendChunk(compaction::DataChunk &chunk) {
   assert(types_ == chunk.types_);
-  collection_.resize(chunk.count_);
+  collection_.resize(chunk.count_ + n_tuples_);
 
   vector<Attribute> tuple(types_.size());
   for (size_t i = 0; i < chunk.count_; ++i) {
+    auto idx = chunk.selection_vector_[i];
     for (size_t j = 0; j < tuple.size(); ++j) {
-      auto idx = chunk.data_[j].selection_vector_[i];
       tuple[j] = chunk.data_[j].GetValue(idx);
     }
-    collection_[i] = tuple;
+    collection_[n_tuples_ + i] = tuple;
   }
   n_tuples_ += chunk.count_;
 }
