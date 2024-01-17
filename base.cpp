@@ -49,29 +49,4 @@ void DataChunk::Slice(DataChunk &other, vector<uint32_t> &selection_vector, size
     selection_vector_[i] = key_idx;
   }
 }
-
-void DataChunk::Print() {
-  for (size_t i = 0; i < count_; ++i) {
-    for (size_t j = 0; j < data_.size(); ++j) {
-      size_t idx = selection_vector_[i];
-      switch (types_[j]) {
-        case AttributeType::INTEGER: {
-          std::cout << std::get<size_t>(data_[j].GetValue(idx)) << ", ";
-          break;
-        }
-        case AttributeType::DOUBLE: {
-          std::cout << std::get<double>(data_[j].GetValue(idx)) << ", ";
-          break;
-        }
-        case AttributeType::STRING: {
-          std::cout << std::get<std::string>(data_[j].GetValue(idx)) << ", ";
-          break;
-        }
-        case AttributeType::INVALID:break;
-      }
-    }
-    std::cout << "\n";
-  }
-  std::cout << "-------------------------------\n";
-}
 }
