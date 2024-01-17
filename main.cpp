@@ -31,7 +31,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
-    // result_table.AppendChunk(input);
+    result_table.AppendChunk(input);
     return;
   }
 
