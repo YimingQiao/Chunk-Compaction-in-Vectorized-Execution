@@ -30,9 +30,9 @@ void NaiveCompactor::Compact(unique_ptr<DataChunk> &chunk) {
   profiler.Start();
   {
     // swap
-    chunk = std::move(cached_chunk_);
-    cached_chunk_ = std::move(temp_chunk_);
-    temp_chunk_ = std::make_unique<DataChunk>(chunk->types_);
+    chunk.swap(cached_chunk_);
+    cached_chunk_.swap(temp_chunk_);
+    temp_chunk_->Reset();
   }
   time = profiler.Elapsed();
   BeeProfiler::Get().InsertStatRecord("[Naive Compact - Fetch] " + name_, time);

@@ -60,7 +60,7 @@ using Profiler = BaseProfiler<system_clock>;
 
 class BeeProfiler {
  public:
-  const static bool kEnableProfiling = true;
+  const static bool kEnableProfiling = 0;
 
  public:
   static BeeProfiler &Get() {
@@ -178,7 +178,7 @@ class BeeProfiler {
 
 class ZebraProfiler {
  public:
-  const static bool kEnableProfiling = false;
+  const static bool kEnableProfiling = 1;
 
  public:
   static ZebraProfiler &Get() {

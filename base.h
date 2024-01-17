@@ -71,5 +71,10 @@ class DataChunk {
   void AppendTuple(vector<Attribute> &tuple);
 
   void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count);
+
+  void Reset(){
+    count_ = 0;
+    for (size_t i = 0; i < kBlockSize; ++i) selection_vector_[i] = i;
+  };
 };
 }
