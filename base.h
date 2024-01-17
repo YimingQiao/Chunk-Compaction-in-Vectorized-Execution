@@ -71,12 +71,5 @@ class DataChunk {
   void AppendTuple(vector<Attribute> &tuple);
 
   void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count);
-
-  void Move(DataChunk &other) {
-    count_ = other.count_;
-    data_ = std::move(other.data_);
-  }
-
-  void Print();
 };
 }
