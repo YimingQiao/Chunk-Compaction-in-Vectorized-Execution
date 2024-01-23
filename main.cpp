@@ -7,7 +7,7 @@
 #include "profiler.h"
 #include "compactor.h"
 
-#define COMPACT
+//#define COMPACT
 
 using namespace compaction;
 

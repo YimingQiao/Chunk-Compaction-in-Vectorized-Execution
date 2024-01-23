@@ -42,10 +42,9 @@ void DataChunk::Slice(DataChunk &other, vector<uint32_t> &selection_vector, size
     data_[c].Reference(other.data_[c]);
   }
 
-  selection_vector_ = other.selection_vector_;
   for (size_t i = 0; i < count; ++i) {
     auto new_idx = selection_vector[i];
-    auto key_idx = selection_vector_[new_idx];
+    auto key_idx = other.selection_vector_[new_idx];
     selection_vector_[i] = key_idx;
   }
 }

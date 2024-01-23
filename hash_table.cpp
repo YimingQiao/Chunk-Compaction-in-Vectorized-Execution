@@ -86,9 +86,8 @@ size_t ScanStructure::ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_v
   while (true) {
     // Match
     size_t result_count = 0;
-    result_vector = bucket_sel_vector_;
     for (size_t i = 0; i < count_; ++i) {
-      size_t idx = result_vector[i];
+      size_t idx = bucket_sel_vector_[i];
       size_t key_idx = bucket_format_[idx];
       auto &l_key = join_key.GetValue(key_idx);
       auto &r_key = iterators_[key_idx]->attrs_[0];

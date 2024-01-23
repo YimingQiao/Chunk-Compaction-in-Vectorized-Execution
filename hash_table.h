@@ -34,11 +34,10 @@ class ScanStructure {
                          HashTable *ht)
       : count_(count), buckets_(std::move(buckets)),
         bucket_sel_vector_(std::move(bucket_sel_vector)), bucket_format_(key_format), ht_(ht) {
-    auto &key_sel_vector = key_format;
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
       size_t idx = bucket_sel_vector_[i];
-      size_t idx_key = key_sel_vector[idx];
+      size_t idx_key = bucket_format_[idx];
       iterators_[idx_key] = buckets_[idx_key]->begin();
     }
   }
