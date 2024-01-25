@@ -14,7 +14,7 @@ using namespace compaction;
 const size_t kJoins = 3;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 8;
+const size_t kChunkFactor = 16;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -41,7 +41,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   auto ss = hts[level]->Probe(join_key);
   while (ss.HasNext()) {
-    ss.Next(join_key, input, *result);
+    ss.Next(join_key, input, *result, false);
 
 #ifdef COMPACT
     // A compactor sits here.

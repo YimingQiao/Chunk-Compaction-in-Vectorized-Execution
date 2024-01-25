@@ -63,7 +63,6 @@ class Vector {
 
   inline void Reset() {
     count_ = 0;
-    for (size_t i = 0; i < kBlockSize; ++i) selection_vector_[i] = i;
   }
 
  private:
