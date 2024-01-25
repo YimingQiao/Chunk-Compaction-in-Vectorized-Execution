@@ -20,7 +20,10 @@ class NaiveCompactor {
 
   void Compact(unique_ptr<DataChunk> &chunk);
 
-  inline void Flush(unique_ptr<DataChunk> &chunk) { chunk = std::move(cached_chunk_); }
+  inline void Flush(unique_ptr<DataChunk> &chunk) {
+    assert(n_tuple_in == n_tuple_out);
+    chunk.swap(cached_chunk_);
+  }
 
  private:
   unique_ptr<DataChunk> cached_chunk_;

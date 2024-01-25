@@ -7,14 +7,14 @@
 #include "profiler.h"
 #include "compactor.h"
 
-//#define COMPACT
+#define COMPACT
 
 using namespace compaction;
 
 const size_t kJoins = 3;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 1;
+const size_t kChunkFactor = 16;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -77,7 +77,7 @@ void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size
 int main() {
   // random generator
   std::random_device rd;
-  std::mt19937 gen(1);
+  std::mt19937 gen(2);
   std::uniform_int_distribution<> dist(0, kRHSTupleSize);
 
   // create probe table: (id, course_id, major_id, miscellaneous)
@@ -109,12 +109,12 @@ int main() {
   Profiler timer;
   {
     // Start process each chunk in the lhs table
-    size_t num_chunk_size = 1;
+    size_t num_chunk_size = kBlockSize;
     size_t start = 0;
     size_t end;
     do {
       end = std::min(start + num_chunk_size, kLHSTupleSize);
-      num_chunk_size = (num_chunk_size + 1) % kBlockSize;
+      // num_chunk_size = (num_chunk_size + 1) % kBlockSize;
       DataChunk chunk = table.FetchChunk(start, end);
       start = end;
 
@@ -136,7 +136,8 @@ int main() {
   }
 
   BeeProfiler::Get().EndProfiling();
-  ZebraProfiler::Get().ToCSV();
+  ZebraProfiler::Get().PrintResults();
+  // ZebraProfiler::Get().ToCSV();
 
   // show the joined result.
   std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
