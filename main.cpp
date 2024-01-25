@@ -12,8 +12,8 @@
 using namespace compaction;
 
 const size_t kJoins = 4;
-const size_t kLHSTupleSize = 1e4;
-const size_t kRHSTupleSize = 1e4;
+const size_t kLHSTupleSize = 1e7;
+const size_t kRHSTupleSize = 1e6;
 const size_t kChunkFactor = 1;
 
 struct PipelineState {
@@ -81,11 +81,14 @@ int main() {
   std::uniform_int_distribution<> dist(0, kRHSTupleSize);
 
   // create probe table: (id, course_id, major_id, miscellaneous)
-  vector<AttributeType> types
-      {AttributeType::INTEGER, AttributeType::INTEGER, AttributeType::INTEGER, AttributeType::STRING};
+  vector<AttributeType> types;
+  for (size_t i = 0; i < kJoins; ++i) types.push_back(AttributeType::INTEGER);
+  types.push_back(AttributeType::STRING);
   compaction::DataCollection table(types);
+  vector<compaction::Attribute> tuple(kJoins + 1);
+  tuple[kJoins] = "|";
   for (size_t i = 0; i < kLHSTupleSize; ++i) {
-    std::vector<compaction::Attribute> tuple{size_t(dist(gen)), size_t(dist(gen)), size_t(dist(gen)), "|"};
+    for (size_t j = 0; j < kJoins; ++j) tuple[j] = size_t(dist(gen));
     table.AppendTuple(tuple);
   }
 
