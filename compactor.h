@@ -21,7 +21,6 @@ class NaiveCompactor {
   void Compact(unique_ptr<DataChunk> &chunk);
 
   inline void Flush(unique_ptr<DataChunk> &chunk) {
-    assert(n_tuple_in == n_tuple_out);
     chunk.swap(cached_chunk_);
   }
 
