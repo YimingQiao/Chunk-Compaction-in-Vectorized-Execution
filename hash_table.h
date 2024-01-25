@@ -58,17 +58,14 @@ class ScanStructure {
 
   inline void AdvancePointers();
 
-  inline void GatherResult(vector<Vector *> cols,
-                           vector<uint32_t> &sel_vector,
-                           vector<uint32_t> &result_vector,
-                           size_t count);
+  inline void GatherResult(vector<Vector *> cols, vector<uint32_t> &result_vector, size_t count);
 };
 
 class HashTable {
  public:
   HashTable(size_t n_rhs_tuples, size_t chunk_factor);
 
-  ScanStructure Probe(Vector &join_key, size_t count, vector<uint32_t> &sel_vector);
+  ScanStructure Probe(Vector &join_key);
 
  private:
   size_t n_buckets_;

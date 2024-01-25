@@ -39,7 +39,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
   auto &result = intermediates[level];
   auto &compactor = compactors[level];
 
-  auto ss = hts[level]->Probe(join_key, input.count_, input.selection_vector_);
+  auto ss = hts[level]->Probe(join_key);
   while (ss.HasNext()) {
     ss.Next(join_key, input, *result);
 
@@ -109,12 +109,12 @@ int main() {
   Profiler timer;
   {
     // Start process each chunk in the lhs table
-    size_t num_chunk_size = 1;
+    size_t num_chunk_size = kBlockSize;
     size_t start = 0;
     size_t end;
     do {
       end = std::min(start + num_chunk_size, kLHSTupleSize);
-      num_chunk_size = (num_chunk_size + 1) % kBlockSize;
+      // num_chunk_size = (num_chunk_size + 1) % kBlockSize;
       DataChunk chunk = table.FetchChunk(start, end);
       start = end;
 

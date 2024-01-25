@@ -27,13 +27,13 @@ HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   }
 }
 
-ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t> &sel_vector) {
+ScanStructure HashTable::Probe(Vector &join_key) {
   Profiler profiler;
   profiler.Start();
 
   vector<list<Tuple> *> ptrs(kBlockSize);
-  for (size_t i = 0; i < count; ++i) {
-    auto idx = sel_vector[i];
+  for (size_t i = 0; i < join_key.count_; ++i) {
+    auto idx = join_key.selection_vector_[i];
     auto attr = join_key.GetValue(idx);
     auto bucket_idx = hash_(attr) % n_buckets_;
     ptrs[idx] = linked_lists_[bucket_idx].get();
@@ -41,15 +41,15 @@ ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t> 
 
   size_t n_non_empty = 0;
   vector<uint32_t> ptrs_sel_vector(kBlockSize);
-  for (size_t i = 0; i < count; ++i) {
-    auto idx = sel_vector[i];
+  for (size_t i = 0; i < join_key.count_; ++i) {
+    auto idx = join_key.selection_vector_[i];
     if (!ptrs[idx]->empty()) ptrs_sel_vector[n_non_empty++] = i;
   }
-  auto ret = ScanStructure(n_non_empty, ptrs_sel_vector, ptrs, sel_vector, this);
+  auto ret = ScanStructure(n_non_empty, ptrs_sel_vector, ptrs, join_key.selection_vector_, this);
 
   double time = profiler.Elapsed();
   BeeProfiler::Get().InsertStatRecord("[Join - Probe] 0x" + std::to_string(size_t(this)), time);
-  ZebraProfiler::Get().InsertRecord("[Join - Probe] 0x" + std::to_string(size_t(this)), count, time);
+  ZebraProfiler::Get().InsertRecord("[Join - Probe] 0x" + std::to_string(size_t(this)), join_key.count_, time);
   return ret;
 }
 
@@ -73,7 +73,7 @@ void ScanStructure::Next(Vector &join_key, DataChunk &input, DataChunk &result) 
 
     // on the RHS, we need to fetch the data from the hash table
     vector<Vector *> cols{&result.data_[input.data_.size()], &result.data_[input.data_.size() + 1]};
-    GatherResult(cols, input.selection_vector_, result_vector, result_count);
+    GatherResult(cols, result_vector, result_count);
   }
   AdvancePointers();
 
@@ -112,19 +112,14 @@ void ScanStructure::AdvancePointers() {
   count_ = new_count;
 }
 
-void ScanStructure::GatherResult(vector<Vector *> cols,
-                                 vector<uint32_t> &sel_vector,
-                                 vector<uint32_t> &result_vector,
-                                 size_t count) {
+void ScanStructure::GatherResult(vector<Vector *> cols, vector<uint32_t> &sel_vector, size_t count) {
   for (size_t c = 0; c < cols.size(); ++c) {
     auto &col = *cols[c];
+    col.count_ = count;
     for (size_t i = 0; i < count; ++i) {
-      auto idx = result_vector[i];
-      auto r_idx = bucket_format_[idx];
-
-      // columns from the right table align with the selection vector given by the left table
-      auto l_idx = sel_vector[idx];
-      col.GetValue(l_idx) = iterators_[r_idx]->attrs_[c];
+      auto idx = sel_vector[i];
+      auto key_idx = bucket_format_[idx];
+      col.GetValue(i) = iterators_[key_idx]->attrs_[c];
     }
   }
 }
