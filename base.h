@@ -61,6 +61,11 @@ class Vector {
     return (*data_)[idx];
   }
 
+  inline void Reset() {
+    count_ = 0;
+    for (size_t i = 0; i < kBlockSize; ++i) selection_vector_[i] = i;
+  }
+
  private:
   shared_ptr<vector<Attribute>> data_;
 };
@@ -82,7 +87,7 @@ class DataChunk {
 
   void Reset() {
     count_ = 0;
-    for (Vector &col : data_) col.count_ = 0;
+    for (Vector &col : data_) col.Reset();
   };
 };
 }
