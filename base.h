@@ -53,7 +53,7 @@ class Vector {
 
   inline void Append(Vector &other, size_t num, size_t offset = 0);
 
-  inline void Slice(vector<uint32_t> &selection_vector, size_t count);
+  inline void Slice(Vector &other, vector<uint32_t> &selection_vector, size_t count);
 
   inline void Reference(Vector &other);
 

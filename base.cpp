@@ -12,11 +12,11 @@ void Vector::Append(Vector &other, size_t num, size_t offset) {
   }
 }
 
-void Vector::Slice(vector<uint32_t> &selection_vector, size_t count) {
+void Vector::Slice(Vector &other, vector<uint32_t> &selection_vector, size_t count) {
   count_ = count;
   for (size_t i = 0; i < count; ++i) {
     auto new_idx = selection_vector[i];
-    auto key_idx = selection_vector_[new_idx];
+    auto key_idx = other.selection_vector_[new_idx];
     selection_vector_[i] = key_idx;
   }
 }
@@ -24,7 +24,6 @@ void Vector::Slice(vector<uint32_t> &selection_vector, size_t count) {
 void Vector::Reference(Vector &other) {
   assert(type_ == other.type_);
   data_ = other.data_;
-  selection_vector_ = other.selection_vector_;
 }
 
 DataChunk::DataChunk(const vector<AttributeType> &types) : count_(0), types_(types) {
@@ -55,7 +54,7 @@ void DataChunk::Slice(DataChunk &other, vector<uint32_t> &selection_vector, size
   this->count_ = count;
   for (size_t c = 0; c < other.data_.size(); ++c) {
     data_[c].Reference(other.data_[c]);
-    data_[c].Slice(selection_vector, count);
+    data_[c].Slice(other.data_[c], selection_vector, count);
   }
 }
 }
