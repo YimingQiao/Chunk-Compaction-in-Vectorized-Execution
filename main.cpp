@@ -14,7 +14,7 @@ using namespace compaction;
 const size_t kJoins = 4;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 8;
+const size_t kChunkFactor = 10;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -77,7 +77,7 @@ void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size
 int main() {
   // random generator
   std::random_device rd;
-  std::mt19937 gen(1);
+  std::mt19937 gen(2);
   std::uniform_int_distribution<> dist(0, kRHSTupleSize);
 
   // create probe table: (id, course_id, major_id, miscellaneous)
