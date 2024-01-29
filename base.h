@@ -25,6 +25,7 @@ using std::shared_ptr;
 using std::unique_ptr;
 using std::unordered_map;
 using std::string;
+using idx_t = size_t;
 
 // Each block here is 2048
 constexpr size_t kBlockSize = 2048;
@@ -72,7 +73,7 @@ class DataChunk {
 
   void Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count);
 
-  void Reset(){
+  void Reset() {
     count_ = 0;
     for (size_t i = 0; i < kBlockSize; ++i) selection_vector_[i] = i;
   };

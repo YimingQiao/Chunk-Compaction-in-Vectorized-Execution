@@ -117,8 +117,7 @@ void ScanStructure::GatherResult(vector<Vector *> cols, vector<uint32_t> &sel_ve
       auto &attr = iterators_[idx]->attrs_[c];
 
       // columns from the right table align with the selection vector given by the left table
-      auto l_idx = sel_vector[idx];
-      col.GetValue(l_idx) = attr;
+      col.GetValue(sel_vector[idx]) = attr;
     }
   }
 }

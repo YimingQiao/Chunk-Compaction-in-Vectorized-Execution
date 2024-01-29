@@ -9,12 +9,22 @@
 
 using namespace compaction;
 
-//#define COMPACT
-const size_t kJoins = 4;
-const size_t kLHSTupleSize = 1e7;
-const size_t kRHSTupleSize = 1e6;
+const size_t kJoins = 3;
+const size_t kLHSTupleSize = 2e7;
+const size_t kRHSTupleSize = 2e6;
 const size_t kChunkFactor = 8;
+
+#define BINARY_COMPACT
+
+#ifdef FULL_COMPACT
+using Compactor = NaiveCompactor;
+#elif defined(BINARY_COMPACT)
 using Compactor = BinaryCompactor;
+#elif defined(DYNAMIC_COMPACT)
+using Compactor = DynamicCompactor;
+#else
+using Compactor = NaiveCompactor;
+#endif
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -39,11 +49,26 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
   auto &result = intermediates[level];
   auto &compactor = compactors[level];
 
+#ifdef DYNAMIC_COMPACT
+  // ---------------------------------- learn compaction thresholds -------------------------------------
+  Profiler profiler;
+  profiler.Start();
+  // 1. Get a compaction threshold
+  // 2. Start to record execution time
+  size_t threshold = CompactTuner::Get().SelectArm(level);
+  compactor->SetThreshold(threshold);
+
+  BeeProfiler::Get().InsertStatRecord("[UCB Get Thresholds]", profiler.Elapsed());
+
+  profiler.Start();
+  // -----------------------------------------------------------------------------------------------------
+#endif
+
   auto ss = hts[level]->Probe(join_key, input.count_, input.selection_vector_);
   while (ss.HasNext()) {
     ss.Next(join_key, input, *result);
 
-#ifdef COMPACT
+#if defined(FULL_COMPACT) || defined(BINARY_COMPACT) || defined(DYNAMIC_COMPACT)
     // A compactor sits here.
     compactor->Compact(result);
     if (result->count_ == 0) continue;
@@ -51,6 +76,15 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
     ExecutePipeline(*result, state, result_table, level + 1);
   }
+
+#ifdef DYNAMIC_COMPACT
+  // ---------------------------------- learn compaction thresholds -------------------------------------
+  double time = profiler.Elapsed();
+  profiler.Start();
+  CompactTuner::Get().UpdateArm(level, compactor->GetThreshold(), 1 / time / 1e2);
+  BeeProfiler::Get().InsertStatRecord("[UCB Update]", profiler.Elapsed());
+  // -----------------------------------------------------------------------------------------------------
+#endif
 }
 
 void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size_t level) {
@@ -79,6 +113,8 @@ int main() {
   std::random_device rd;
   std::mt19937 gen(2);
   std::uniform_int_distribution<> dist(0, kRHSTupleSize);
+
+  // ---------------------------------------------- Query Setting ----------------------------------------------
 
   // create probe table: (id1, id2, ..., idn, miscellaneous)
   vector<AttributeType> types;
@@ -109,6 +145,12 @@ int main() {
   // create the result_table collection
   DataCollection result_table(types);
 
+#ifdef DYNAMIC_COMPACT
+  // create MAB for each join operator
+  for (size_t i = 0; i < kJoins; ++i) CompactTuner::Get().Initialize(size_t(&state.compactors[i]));
+#endif
+  // -----------------------------------------------------------------------------------------------------------
+
   double latency = 0;
   Profiler timer;
   {
@@ -127,7 +169,7 @@ int main() {
       latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
-#ifdef COMPACT
+#if defined(FULL_COMPACT) || defined(BINARY_COMPACT) || defined(DYNAMIC_COMPACT)
     timer.Start();
     {
       // Flush the tuples in cache.
@@ -142,6 +184,7 @@ int main() {
   BeeProfiler::Get().EndProfiling();
   // ZebraProfiler::Get().PrintResults();
   ZebraProfiler::Get().ToCSV();
+  CompactTuner::Get().Reset();
 
   // show the joined result.
   std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
