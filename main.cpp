@@ -7,19 +7,19 @@
 #include "profiler.h"
 #include "compactor.h"
 
-//#define COMPACT
-
 using namespace compaction;
 
+//#define COMPACT
 const size_t kJoins = 4;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 4;
+const size_t kChunkFactor = 9;
+using Compactor = BinaryCompactor;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
   vector<unique_ptr<DataChunk>> intermediates;
-  vector<unique_ptr<NaiveCompactor>> compactors;
+  vector<unique_ptr<Compactor>> compactors;
 
   PipelineState() : hts(kJoins), intermediates(kJoins), compactors(kJoins) {}
 };
@@ -102,7 +102,8 @@ int main() {
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);
-    compactors[i] = std::make_unique<NaiveCompactor>(types);
+    // compactors[i] = std::make_unique<NaiveCompactor>(types);
+    compactors[i] = std::make_unique<Compactor>(types);
   }
 
   // create the result_table collection
