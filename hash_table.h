@@ -2,7 +2,7 @@
 //
 //                         Compaction
 //
-// hash_table
+// hash_table.h
 //
 //
 //===----------------------------------------------------------------------===//
@@ -33,12 +33,11 @@ class ScanStructure {
                          vector<uint32_t> &key_format,
                          HashTable *ht)
       : count_(count), buckets_(std::move(buckets)),
-        bucket_sel_vector_(std::move(bucket_sel_vector)), bucket_format_(key_format), ht_(ht) {
+        bucket_sel_vector_(std::move(bucket_sel_vector)), key_sel_vector_(key_format), ht_(ht) {
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
       size_t idx = bucket_sel_vector_[i];
-      size_t idx_key = bucket_format_[idx];
-      iterators_[idx_key] = buckets_[idx_key]->begin();
+      iterators_[idx] = buckets_[idx]->begin();
     }
   }
 
@@ -50,7 +49,7 @@ class ScanStructure {
   size_t count_;
   vector<list<Tuple> *> buckets_;
   vector<uint32_t> bucket_sel_vector_;
-  vector<uint32_t> &bucket_format_;
+  vector<uint32_t> &key_sel_vector_;
   vector<list<Tuple>::iterator> iterators_;
   HashTable *ht_;
 
@@ -58,9 +57,7 @@ class ScanStructure {
 
   inline void AdvancePointers();
 
-  inline void GatherResult(vector<Vector *> cols,
-                           vector<uint32_t> &sel_vector,
-                           vector<uint32_t> &result_vector,
+  inline void GatherResult(vector<Vector *> cols, vector<uint32_t> &sel_vector, vector<uint32_t> &result_vector,
                            size_t count);
 };
 

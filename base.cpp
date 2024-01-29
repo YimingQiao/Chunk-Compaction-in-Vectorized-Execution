@@ -38,9 +38,7 @@ void DataChunk::AppendTuple(vector<Attribute> &tuple) {
 void DataChunk::Slice(DataChunk &other, vector<uint32_t> &selection_vector, size_t count) {
   assert(other.data_.size() <= data_.size());
   this->count_ = count;
-  for (size_t c = 0; c < other.data_.size(); ++c) {
-    data_[c].Reference(other.data_[c]);
-  }
+  for (size_t c = 0; c < other.data_.size(); ++c) data_[c].Reference(other.data_[c]);
 
   for (size_t i = 0; i < count; ++i) {
     auto new_idx = selection_vector[i];

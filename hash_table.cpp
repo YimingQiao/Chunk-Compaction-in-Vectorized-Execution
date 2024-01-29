@@ -33,17 +33,15 @@ ScanStructure HashTable::Probe(Vector &join_key, size_t count, vector<uint32_t> 
 
   vector<list<Tuple> *> ptrs(kBlockSize);
   for (size_t i = 0; i < count; ++i) {
-    auto idx = sel_vector[i];
-    auto attr = join_key.GetValue(idx);
+    auto attr = join_key.GetValue(sel_vector[i]);
     auto bucket_idx = hash_(attr) % n_buckets_;
-    ptrs[idx] = linked_lists_[bucket_idx].get();
+    ptrs[i] = linked_lists_[bucket_idx].get();
   }
 
   size_t n_non_empty = 0;
   vector<uint32_t> ptrs_sel_vector(kBlockSize);
   for (size_t i = 0; i < count; ++i) {
-    auto idx = sel_vector[i];
-    if (!ptrs[idx]->empty()) ptrs_sel_vector[n_non_empty++] = i;
+    if (!ptrs[i]->empty()) ptrs_sel_vector[n_non_empty++] = i;
   }
   auto ret = ScanStructure(n_non_empty, ptrs_sel_vector, ptrs, sel_vector, this);
 
@@ -88,9 +86,8 @@ size_t ScanStructure::ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_v
     size_t result_count = 0;
     for (size_t i = 0; i < count_; ++i) {
       size_t idx = bucket_sel_vector_[i];
-      size_t key_idx = bucket_format_[idx];
-      auto &l_key = join_key.GetValue(key_idx);
-      auto &r_key = iterators_[key_idx]->attrs_[0];
+      auto &l_key = join_key.GetValue(key_sel_vector_[idx]);
+      auto &r_key = iterators_[idx]->attrs_[0];
       if (l_key == r_key) result_vector[result_count++] = idx;
     }
 
@@ -106,25 +103,22 @@ void ScanStructure::AdvancePointers() {
   size_t new_count = 0;
   for (size_t i = 0; i < count_; i++) {
     auto idx = bucket_sel_vector_[i];
-    auto key_idx = bucket_format_[idx];
-    if (++iterators_[key_idx] != buckets_[key_idx]->end()) bucket_sel_vector_[new_count++] = idx;
+    if (++iterators_[idx] != buckets_[idx]->end()) bucket_sel_vector_[new_count++] = idx;
   }
   count_ = new_count;
 }
 
-void ScanStructure::GatherResult(vector<Vector *> cols,
-                                 vector<uint32_t> &sel_vector,
-                                 vector<uint32_t> &result_vector,
+void ScanStructure::GatherResult(vector<Vector *> cols, vector<uint32_t> &sel_vector, vector<uint32_t> &result_vector,
                                  size_t count) {
   for (size_t c = 0; c < cols.size(); ++c) {
     auto &col = *cols[c];
     for (size_t i = 0; i < count; ++i) {
       auto idx = result_vector[i];
-      auto r_idx = bucket_format_[idx];
+      auto &attr = iterators_[idx]->attrs_[c];
 
       // columns from the right table align with the selection vector given by the left table
       auto l_idx = sel_vector[idx];
-      col.GetValue(l_idx) = iterators_[r_idx]->attrs_[c];
+      col.GetValue(l_idx) = attr;
     }
   }
 }

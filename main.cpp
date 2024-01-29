@@ -9,11 +9,11 @@
 
 using namespace compaction;
 
-//#define COMPACT
+#define COMPACT
 const size_t kJoins = 4;
 const size_t kLHSTupleSize = 1e7;
 const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 9;
+const size_t kChunkFactor = 10;
 using Compactor = BinaryCompactor;
 
 struct PipelineState {
