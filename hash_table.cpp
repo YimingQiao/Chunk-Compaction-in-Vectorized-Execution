@@ -5,9 +5,7 @@ namespace compaction {
 HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   n_buckets_ = 2 * n_rhs_tuples;
   linked_lists_.resize(n_buckets_);
-  for (auto &bucket : linked_lists_)
-    bucket = std::make_unique<list<Tuple>>
-        ();
+  for (auto &bucket : linked_lists_) bucket = std::make_unique<list<Tuple>>();
 
   // Tuple in Hash Table
   string payload_name = "payload_0x" + std::to_string(size_t(this)) + "_";
