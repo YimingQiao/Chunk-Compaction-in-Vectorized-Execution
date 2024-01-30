@@ -6,15 +6,9 @@
 #include "data_collection.h"
 #include "profiler.h"
 #include "compactor.h"
-
-//#define COMPACT
+#include "setting.h"
 
 using namespace compaction;
-
-const size_t kJoins = 4;
-const size_t kLHSTupleSize = 1e7;
-const size_t kRHSTupleSize = 1e6;
-const size_t kChunkFactor = 10;
 
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
@@ -31,7 +25,9 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
+#ifdef flag_collect_tuples
     result_table.AppendChunk(input);
+#endif
     return;
   }
 
@@ -41,9 +37,9 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   auto ss = hts[level]->Probe(join_key);
   while (ss.HasNext()) {
-    ss.Next(join_key, input, *result, true);
+    ss.Next(join_key, input, *result, kEnableLogicalCompact);
 
-#ifdef COMPACT
+#ifdef flag_full_compact
     // A compactor sits here.
     compactor->Compact(result);
     if (result->count_ == 0) continue;
@@ -126,7 +122,7 @@ int main() {
       latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
-#ifdef COMPACT
+#ifdef flag_full_compact
     timer.Start();
     {
       // Flush the tuples in cache.
@@ -141,9 +137,11 @@ int main() {
   BeeProfiler::Get().EndProfiling();
   ZebraProfiler::Get().ToCSV();
 
+#ifdef flag_collect_tuples
   // show the joined result.
   std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
   result_table.Print(8);
+#endif
 
   return 0;
 }
