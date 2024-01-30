@@ -10,11 +10,16 @@ HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
   // string payload_name = "payload_0x" + std::to_string(size_t(this)) + "_";
   string payload_name = "";
   vector<Tuple> rhs_table(n_rhs_tuples);
-  for (size_t i = 0; i < n_rhs_tuples; ++i) {
-    auto key = i * chunk_factor % n_rhs_tuples;
-    auto payload = payload_name + std::to_string(i) + "|";
-    rhs_table[i].attrs_.emplace_back(key);
-    rhs_table[i].attrs_.emplace_back(payload);
+  size_t cnt = 0;
+  const size_t num_unique = n_rhs_tuples / chunk_factor + (n_rhs_tuples % chunk_factor != 0);
+  for (size_t i = 0; i < num_unique; ++i) {
+    auto unique_value = i * (n_rhs_tuples / num_unique);
+    for (size_t j = 0; j < chunk_factor && cnt < n_rhs_tuples; ++j) {
+      auto payload = payload_name + std::to_string(cnt) + "|";
+      rhs_table[cnt].attrs_.emplace_back(unique_value);
+      rhs_table[cnt].attrs_.emplace_back(payload);
+      ++cnt;
+    }
   }
 
   // build hash table
