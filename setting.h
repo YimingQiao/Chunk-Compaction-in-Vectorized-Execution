@@ -20,7 +20,7 @@ size_t kChunkFactor = 6;
 vector<size_t> kRHSPayLoadLength{0, 0, 0, 0};
 
 // compaction setting
-#define flag__compact
+#define flag_dynamic_compact
 
 #ifdef flag_full_compact
 using Compactor = NaiveCompactor;
@@ -32,6 +32,5 @@ using Compactor = DynamicCompactor;
 using Compactor = NaiveCompactor;
 #endif
 
-// #define flag_collect_tuples
-
+bool flag_collect_tuples = false;
 }

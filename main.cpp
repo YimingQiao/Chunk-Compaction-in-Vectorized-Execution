@@ -34,9 +34,7 @@ std::vector<size_t> ParseList(const std::string &s) {
 }
 
 void ParseParameters(int argc, char *argv[]) {
-  if (argc != 1 && argc != 5) throw std::runtime_error("Incomplete Parameters");
-
-  if (argc == 5) {
+  if (argc != 1) {
     for (int i = 1; i < argc; i++) {
       std::string arg(argv[i]);
 
@@ -50,12 +48,12 @@ void ParseParameters(int argc, char *argv[]) {
           kChunkFactor = std::stoi(argv[i + 1]);
           i++;
         }
-      } else if (arg == "--lhs_size") {
+      } else if (arg == "--lhs-size") {
         if (i + 1 < argc) {
           kLHSTupleSize = std::stoi(argv[i + 1]);
           i++;
         }
-      } else if (arg == "--rhs_size") {
+      } else if (arg == "--rhs-size") {
         if (i + 1 < argc) {
           kRHSTupleSize = std::stoi(argv[i + 1]);
           i++;
@@ -74,7 +72,8 @@ void ParseParameters(int argc, char *argv[]) {
   std::cerr << "------------------ Setting ------------------\n";
   std::cerr << "Number of Joins: " << kJoins << "\n"
             << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
-            << "Number of RHS Tuple: " << kRHSTupleSize << "\n";
+            << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
+            << "Chunk Factor: " << kChunkFactor << "\n";
   std::cerr << "RHS Payload Lengths: [";
   for (size_t i = 0; i < kJoins; ++i) {
     if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
@@ -82,6 +81,7 @@ void ParseParameters(int argc, char *argv[]) {
   }
 }
 
+// example: compaction --join-num 4 --chunk-factor 5 --lhs-size 20000000 --rhs-size 2000000 --payload-length=[0,0,0,0]
 int main(int argc, char *argv[]) {
   ParseParameters(argc, argv);
 
@@ -144,10 +144,9 @@ int main(int argc, char *argv[]) {
       latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
-#if defined(flag_full_compact) || defined(flag_binary_compact) || defined(flag_dynamic_compact)
+#ifndef defined(flag_no_compact)
     timer.Start();
     {
-      // Flush the tuples in cache.
       FlushPipelineCache(state, result_table, 0);
     }
     latency += timer.Elapsed();
@@ -160,11 +159,11 @@ int main(int argc, char *argv[]) {
   ZebraProfiler::Get().ToCSV();
   CompactTuner::Get().Reset();
 
-#ifdef flag_collect_tuples
-  // show the joined result.
-  std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
-  result_table.Print(8);
-#endif
+  if (flag_collect_tuples) {
+    // show the joined result.
+    std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
+    result_table.Print(8);
+  }
 
   return 0;
 }
@@ -205,7 +204,7 @@ void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &res
   while (ss.HasNext()) {
     ss.Next(join_key, input, *result);
 
-#if defined(flag_full_compact) || defined(flag_binary_compact) || defined(flag_dynamic_compact)
+#ifndef defined(flag_no_compact)
     // A compactor sits here.
     compactor->Compact(result);
     if (result->count_ == 0) continue;
