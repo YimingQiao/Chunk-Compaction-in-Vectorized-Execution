@@ -13,10 +13,11 @@
 namespace compaction {
 
 // query setting
-const size_t kJoins = 3;
+const size_t kJoins = 4;
 const size_t kLHSTupleSize = 2e7;
 const size_t kRHSTupleSize = 2e6;
-const size_t kChunkFactor = 8;
+const size_t kChunkFactor = 6;
+const vector<size_t> kRHSPayLoadLength{0, 1000, 0, 0};
 
 // compaction setting
 #define flag_no_compact

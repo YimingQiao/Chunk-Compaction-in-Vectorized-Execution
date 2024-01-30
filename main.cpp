@@ -76,7 +76,9 @@ int main() {
   std::mt19937 gen(2);
   std::uniform_int_distribution<> dist(0, kRHSTupleSize);
 
-  // create probe table: (id, course_id, major_id, miscellaneous)
+  // ---------------------------------------------- Query Setting ----------------------------------------------
+
+  // create probe table: (id1, id2, ..., idn, miscellaneous)
   vector<AttributeType> types;
   for (size_t i = 0; i < kJoins; ++i) types.push_back(AttributeType::INTEGER);
   types.push_back(AttributeType::STRING);
@@ -94,7 +96,7 @@ int main() {
   auto &intermediates = state.intermediates;
   auto &compactors = state.compactors;
   for (size_t i = 0; i < kJoins; ++i) {
-    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor);
+    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i]);
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);

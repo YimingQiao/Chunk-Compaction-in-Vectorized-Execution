@@ -71,7 +71,7 @@ class ScanStructure {
 
 class HashTable {
  public:
-  HashTable(size_t n_rhs_tuples, size_t chunk_factor);
+  HashTable(size_t n_rhs_tuples, size_t chunk_factor, size_t payload_length);
 
   ScanStructure Probe(Vector &join_key);
 
