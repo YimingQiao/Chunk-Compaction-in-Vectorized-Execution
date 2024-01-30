@@ -6,23 +6,17 @@
 #include "data_collection.h"
 #include "profiler.h"
 #include "compactor.h"
+#include "setting.h"
 
 using namespace compaction;
 
-const size_t kJoins = 3;
-const size_t kLHSTupleSize = 2e7;
-const size_t kRHSTupleSize = 2e6;
-const size_t kChunkFactor = 8;
-
-#define BINARY_COMPACT
-
-#ifdef FULL_COMPACT
+#ifdef flag_full_compact
 using Compactor = NaiveCompactor;
-#elif defined(BINARY_COMPACT)
+#elif defined(flag_binary_compact)
 using Compactor = BinaryCompactor;
-#elif defined(DYNAMIC_COMPACT)
+#elif defined(flag_dynamic_compact)
 using Compactor = DynamicCompactor;
-#else
+#elif defined(flag_no_compact)
 using Compactor = NaiveCompactor;
 #endif
 
@@ -41,7 +35,9 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
+#ifdef flag_collect_tuples
     result_table.AppendChunk(input);
+#endif
     return;
   }
 
@@ -49,7 +45,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
   auto &result = intermediates[level];
   auto &compactor = compactors[level];
 
-#ifdef DYNAMIC_COMPACT
+#ifdef flag_dynamic_compact
   // ---------------------------------- learn compaction thresholds -------------------------------------
   Profiler profiler;
   profiler.Start();
@@ -68,7 +64,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
   while (ss.HasNext()) {
     ss.Next(join_key, input, *result);
 
-#if defined(FULL_COMPACT) || defined(BINARY_COMPACT) || defined(DYNAMIC_COMPACT)
+#if defined(flag_full_compact) || defined(flag_binary_compact) || defined(flag_dynamic_compact)
     // A compactor sits here.
     compactor->Compact(result);
     if (result->count_ == 0) continue;
@@ -77,7 +73,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
     ExecutePipeline(*result, state, result_table, level + 1);
   }
 
-#ifdef DYNAMIC_COMPACT
+#ifdef flag_dynamic_compact
   // ---------------------------------- learn compaction thresholds -------------------------------------
   double time = profiler.Elapsed();
   profiler.Start();
@@ -145,7 +141,7 @@ int main() {
   // create the result_table collection
   DataCollection result_table(types);
 
-#ifdef DYNAMIC_COMPACT
+#ifdef flag_dynamic_compact
   // create MAB for each join operator
   for (size_t i = 0; i < kJoins; ++i) CompactTuner::Get().Initialize(size_t(&state.compactors[i]));
 #endif
@@ -169,7 +165,7 @@ int main() {
       latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
-#if defined(FULL_COMPACT) || defined(BINARY_COMPACT) || defined(DYNAMIC_COMPACT)
+#if defined(flag_full_compact) || defined(flag_binary_compact) || defined(flag_dynamic_compact)
     timer.Start();
     {
       // Flush the tuples in cache.
@@ -182,13 +178,14 @@ int main() {
   }
 
   BeeProfiler::Get().EndProfiling();
-  // ZebraProfiler::Get().PrintResults();
   ZebraProfiler::Get().ToCSV();
   CompactTuner::Get().Reset();
 
+#ifdef flag_collect_tuples
   // show the joined result.
   std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
   result_table.Print(8);
+#endif
 
   return 0;
 }
