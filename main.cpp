@@ -10,16 +10,6 @@
 
 using namespace compaction;
 
-#ifdef flag_full_compact
-using Compactor = NaiveCompactor;
-#elif defined(flag_binary_compact)
-using Compactor = BinaryCompactor;
-#elif defined(flag_dynamic_compact)
-using Compactor = DynamicCompactor;
-#elif defined(flag_no_compact)
-using Compactor = NaiveCompactor;
-#endif
-
 struct PipelineState {
   vector<unique_ptr<HashTable>> hts;
   vector<unique_ptr<DataChunk>> intermediates;
@@ -77,7 +67,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
   // ---------------------------------- learn compaction thresholds -------------------------------------
   double time = profiler.Elapsed();
   profiler.Start();
-  CompactTuner::Get().UpdateArm(level, compactor->GetThreshold(), 1 / time / 1e2);
+  CompactTuner::Get().UpdateArm(level, compactor->GetThreshold(), 2 / time / 1e3);
   BeeProfiler::Get().InsertStatRecord("[UCB Update]", profiler.Elapsed());
   // -----------------------------------------------------------------------------------------------------
 #endif
@@ -130,7 +120,7 @@ int main() {
   auto &intermediates = state.intermediates;
   auto &compactors = state.compactors;
   for (size_t i = 0; i < kJoins; ++i) {
-    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor);
+    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i]);
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);

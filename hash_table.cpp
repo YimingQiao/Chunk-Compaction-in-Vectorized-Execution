@@ -1,14 +1,18 @@
 #include "hash_table.h"
 
 namespace compaction {
-HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor) {
+HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor, size_t payload_length) {
   n_buckets_ = 2 * n_rhs_tuples;
   linked_lists_.resize(n_buckets_);
   for (auto &bucket : linked_lists_) bucket = std::make_unique<list<Tuple>>();
 
   // Tuple in Hash Table
-  // string payload_name = "payload_0x" + std::to_string(size_t(this)) + "_";
-  string payload_name = "";
+  string payload_name;
+  if (payload_length > 0) {
+    payload_name = "payload_";
+    payload_name += string(payload_length, 'x');
+    payload_name += "_";
+  }
   vector<Tuple> rhs_table(n_rhs_tuples);
   size_t cnt = 0;
   const size_t num_unique = n_rhs_tuples / chunk_factor + (n_rhs_tuples % chunk_factor != 0);
