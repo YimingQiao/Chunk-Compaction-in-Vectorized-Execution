@@ -26,7 +26,6 @@ using std::unique_ptr;
 using std::unordered_map;
 using std::string;
 
-// Each block here is 2048
 constexpr size_t kBlockSize = 2048;
 
 // Attribute includes three types: integer, float-point number, and the string.
