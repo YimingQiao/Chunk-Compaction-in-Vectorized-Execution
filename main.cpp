@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
       latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
-#ifndef defined(flag_no_compact)
+#ifndef flag_no_compact
     timer.Start();
     {
       FlushPipelineCache(state, result_table, 0);
@@ -204,7 +204,7 @@ void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &res
   while (ss.HasNext()) {
     ss.Next(join_key, input, *result);
 
-#ifndef defined(flag_no_compact)
+#ifndef flag_no_compact
     // A compactor sits here.
     compactor->Compact(result);
     if (result->count_ == 0) continue;
