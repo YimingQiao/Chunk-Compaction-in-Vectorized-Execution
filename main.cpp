@@ -134,7 +134,6 @@ int main() {
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);
-    // compactors[i] = std::make_unique<NaiveCompactor>(types);
     compactors[i] = std::make_unique<Compactor>(types);
   }
 
