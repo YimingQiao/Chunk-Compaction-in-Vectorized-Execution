@@ -18,59 +18,72 @@ struct PipelineState {
   PipelineState() : hts(kJoins), intermediates(kJoins), compactors(kJoins) {}
 };
 
-static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &result_table, size_t level) {
-  auto &hts = state.hts;
-  auto &intermediates = state.intermediates;
-  auto &compactors = state.compactors;
+static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &result_table, size_t level);
 
-  // The last operator: ResultCollector
-  if (level == hts.size()) {
-#ifdef flag_collect_tuples
-    result_table.AppendChunk(input);
-#endif
-    return;
+void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size_t level);
+
+std::vector<size_t> ParseList(const std::string &s) {
+  std::stringstream ss(s.substr(1, s.size() - 2)); // Ignore brackets
+  std::vector<size_t> result;
+  std::string item;
+  while (std::getline(ss, item, ',')) {
+    result.push_back(std::stoi(item));
+  }
+  return result;
+}
+
+void ParseParameters(int argc, char *argv[]) {
+  if (argc != 1) {
+    for (int i = 1; i < argc; i++) {
+      std::string arg(argv[i]);
+
+      if (arg == "--join-num") {
+        if (i + 1 < argc) {
+          kJoins = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg == "--chunk-factor") {
+        if (i + 1 < argc) {
+          kChunkFactor = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg == "--lhs-size") {
+        if (i + 1 < argc) {
+          kLHSTupleSize = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg == "--rhs-size") {
+        if (i + 1 < argc) {
+          kRHSTupleSize = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg.substr(0, 16) == "--payload-length") {
+        // --payload-length=[0,1000,0,0]
+        kRHSPayLoadLength = ParseList(arg.substr(17));
+      }
+    }
+
+    if (kJoins != kRHSPayLoadLength.size())
+      throw std::runtime_error("Payload vector length must equal to the number of joins.");
   }
 
-  auto &join_key = input.data_[level];
-  auto &result = intermediates[level];
-  auto &compactor = compactors[level];
-
-  auto ss = hts[level]->Probe(join_key);
-  while (ss.HasNext()) {
-    ss.Next(join_key, input, *result, kEnableLogicalCompact);
-
-#ifdef flag_full_compact
-    // A compactor sits here.
-    compactor->Compact(result);
-    if (result->count_ == 0) continue;
-#endif
-
-    ExecutePipeline(*result, state, result_table, level + 1);
+  // show the setting
+  std::cerr << "------------------ Setting ------------------\n";
+  std::cerr << "Number of Joins: " << kJoins << "\n"
+            << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
+            << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
+            << "Chunk Factor: " << kChunkFactor << "\n";
+  std::cerr << "RHS Payload Lengths: [";
+  for (size_t i = 0; i < kJoins; ++i) {
+    if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
+    else std::cerr << kRHSPayLoadLength[i] << "]\n";
   }
 }
 
-void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size_t level) {
-  auto &hts = state.hts;
-  auto &intermediates = state.intermediates;
-  auto &compactors = state.compactors;
+// example: compaction --join-num 4 --chunk-factor 5 --lhs-size 20000000 --rhs-size 2000000 --payload-length=[0,0,0,0]
+int main(int argc, char *argv[]) {
+  ParseParameters(argc, argv);
 
-  // The last operator: ResultCollector. It has no compactor.
-  if (level == hts.size()) return;
-
-  auto &result = intermediates[level];
-  auto &compactor = compactors[level];
-
-  // Fetch the remaining tuples in the cache.
-  compactor->Flush(result);
-
-  // Continue the pipeline execution.
-  ExecutePipeline(*result, state, result_table, level + 1);
-
-  // Flush the next level.
-  FlushPipelineCache(state, result_table, level + 1);
-}
-
-int main() {
   // random generator
   std::random_device rd;
   std::mt19937 gen(2);
@@ -132,19 +145,69 @@ int main() {
     }
     latency += timer.Elapsed();
 #endif
-
-    std::cout << "[Total Time]: " << latency << "s\n";
   }
 
+  std::cerr << "------------------ Statistic ------------------\n";
+  std::cerr << "[Total Time]: " << latency << "s\n";
   BeeProfiler::Get().EndProfiling();
   ZebraProfiler::Get().ToCSV();
 
-#ifdef flag_collect_tuples
-  // show the joined result.
-  std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
-  result_table.Print(8);
-#endif
+  if (flag_collect_tuples) {
+    // show the joined result.
+    std::cout << "Number of tuples in the result table: " << result_table.NumTuples() << "\n";
+    result_table.Print(8);
+  }
 
   return 0;
+}
+
+void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &result_table, size_t level) {
+  auto &hts = state.hts;
+  auto &intermediates = state.intermediates;
+  auto &compactors = state.compactors;
+
+  // The last operator: ResultCollector
+  if (level == hts.size()) {
+    if (flag_collect_tuples) result_table.AppendChunk(input);
+    return;
+  }
+
+  auto &join_key = input.data_[level];
+  auto &result = intermediates[level];
+  auto &compactor = compactors[level];
+
+  auto ss = hts[level]->Probe(join_key);
+  while (ss.HasNext()) {
+    ss.Next(join_key, input, *result, kEnableLogicalCompact);
+
+#ifdef flag_full_compact
+    // A compactor sits here.
+    compactor->Compact(result);
+    if (result->count_ == 0) continue;
+#endif
+
+    ExecutePipeline(*result, state, result_table, level + 1);
+  }
+}
+
+void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size_t level) {
+  auto &hts = state.hts;
+  auto &intermediates = state.intermediates;
+  auto &compactors = state.compactors;
+
+  // The last operator: ResultCollector. It has no compactor.
+  if (level == hts.size()) return;
+
+  auto &result = intermediates[level];
+  auto &compactor = compactors[level];
+
+  // Fetch the remaining tuples in the cache.
+  compactor->Flush(result);
+
+  // Continue the pipeline execution.
+  ExecutePipeline(*result, state, result_table, level + 1);
+
+  // Flush the next level.
+  FlushPipelineCache(state, result_table, level + 1);
 }
 
