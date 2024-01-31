@@ -194,8 +194,8 @@ class CompactTuner {
     bandit->UpdateArm(value_index[arm], reward);
   }
 
-  inline void Reset() {
-    if (!bandit_packages_.empty()) {
+  inline void Reset(bool enable_log = false) {
+    if (!bandit_packages_.empty() && enable_log) {
       // output the parameters
       std::cerr << "-------\n";
 
@@ -210,7 +210,7 @@ class CompactTuner {
 
         std::string bandit_name = "0x" + std::to_string(addr) + "\tId-" + std::to_string(id);
         std::cerr << " [PARAMETERS] Compaction Address - " << bandit_name << "\n";
-        // bandit->Log2Csv("./" + folder_name + "/" + bandit_name + ".log");
+        bandit->Log2Csv("./" + folder_name + "/" + bandit_name + ".log");
         bandit->Print(value);
       }
 
