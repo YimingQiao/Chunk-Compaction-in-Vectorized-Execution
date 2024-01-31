@@ -19,10 +19,7 @@ size_t kLHSTupleSize = 2e7;
 size_t kRHSTupleSize = 2e6;
 size_t kChunkFactor = 1;
 
-// compaction setting
-#define flag_no_compact
-
-constexpr bool kEnableLogicalCompact = false;
+constexpr bool kEnableLogicalCompact = true;
 
 bool flag_collect_tuples = false;
 }
