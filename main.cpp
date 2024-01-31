@@ -22,7 +22,6 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
 void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size_t level);
 
-
 std::vector<size_t> ParseList(const std::string &s) {
   std::stringstream ss(s.substr(1, s.size() - 2)); // Ignore brackets
   std::vector<size_t> result;
@@ -203,6 +202,8 @@ void ParseParameters(int argc, char **argv) {
 
   // show the setting
   std::cerr << "------------------ Setting ------------------\n";
+  if (kEnableLogicalCompact) std::cerr << "Strategy: logical_compaction\n";
+  else std::cerr << "Compaction Strategy: no_compaction\n";
   std::cerr << "Number of Joins: " << kJoins << "\n"
             << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
             << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
