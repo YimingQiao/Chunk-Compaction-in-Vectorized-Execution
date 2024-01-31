@@ -22,6 +22,7 @@ static void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollecti
 
 void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size_t level);
 
+
 std::vector<size_t> ParseList(const std::string &s) {
   std::stringstream ss(s.substr(1, s.size() - 2)); // Ignore brackets
   std::vector<size_t> result;
@@ -32,53 +33,7 @@ std::vector<size_t> ParseList(const std::string &s) {
   return result;
 }
 
-void ParseParameters(int argc, char *argv[]) {
-  if (argc != 1) {
-    for (int i = 1; i < argc; i++) {
-      std::string arg(argv[i]);
-
-      if (arg == "--join-num") {
-        if (i + 1 < argc) {
-          kJoins = std::stoi(argv[i + 1]);
-          i++;
-        }
-      } else if (arg == "--chunk-factor") {
-        if (i + 1 < argc) {
-          kChunkFactor = std::stoi(argv[i + 1]);
-          i++;
-        }
-      } else if (arg == "--lhs-size") {
-        if (i + 1 < argc) {
-          kLHSTupleSize = std::stoi(argv[i + 1]);
-          i++;
-        }
-      } else if (arg == "--rhs-size") {
-        if (i + 1 < argc) {
-          kRHSTupleSize = std::stoi(argv[i + 1]);
-          i++;
-        }
-      } else if (arg.substr(0, 16) == "--payload-length") {
-        // --payload-length=[0,1000,0,0]
-        kRHSPayLoadLength = ParseList(arg.substr(17));
-      }
-    }
-
-    if (kJoins != kRHSPayLoadLength.size())
-      throw std::runtime_error("Payload vector length must equal to the number of joins.");
-  }
-
-  // show the setting
-  std::cerr << "------------------ Setting ------------------\n";
-  std::cerr << "Number of Joins: " << kJoins << "\n"
-            << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
-            << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
-            << "Chunk Factor: " << kChunkFactor << "\n";
-  std::cerr << "RHS Payload Lengths: [";
-  for (size_t i = 0; i < kJoins; ++i) {
-    if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
-    else std::cerr << kRHSPayLoadLength[i] << "]\n";
-  }
-}
+void ParseParameters(int argc, char *argv[]);
 
 // example: compaction --join-num 4 --chunk-factor 5 --lhs-size 20000000 --rhs-size 2000000 --payload-length=[0,0,0,0]
 int main(int argc, char *argv[]) {
@@ -209,5 +164,53 @@ void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size
 
   // Flush the next level.
   FlushPipelineCache(state, result_table, level + 1);
+}
+
+void ParseParameters(int argc, char **argv) {
+  if (argc != 1) {
+    for (int i = 1; i < argc; i++) {
+      std::string arg(argv[i]);
+
+      if (arg == "--join-num") {
+        if (i + 1 < argc) {
+          kJoins = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg == "--chunk-factor") {
+        if (i + 1 < argc) {
+          kChunkFactor = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg == "--lhs-size") {
+        if (i + 1 < argc) {
+          kLHSTupleSize = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg == "--rhs-size") {
+        if (i + 1 < argc) {
+          kRHSTupleSize = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg.substr(0, 16) == "--payload-length") {
+        // --payload-length=[0,1000,0,0]
+        kRHSPayLoadLength = ParseList(arg.substr(17));
+      }
+    }
+
+    if (kJoins != kRHSPayLoadLength.size())
+      throw std::runtime_error("Payload vector length must equal to the number of joins.");
+  }
+
+  // show the setting
+  std::cerr << "------------------ Setting ------------------\n";
+  std::cerr << "Number of Joins: " << kJoins << "\n"
+            << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
+            << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
+            << "Chunk Factor: " << kChunkFactor << "\n";
+  std::cerr << "RHS Payload Lengths: [";
+  for (size_t i = 0; i < kJoins; ++i) {
+    if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
+    else std::cerr << kRHSPayLoadLength[i] << "]\n";
+  }
 }
 

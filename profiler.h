@@ -101,19 +101,17 @@ class BeeProfiler {
 
     // -------------------------------- Print Timing Results --------------------------------
     std::vector<std::string> keys;
-    for (const auto &pair : values_) {
-      keys.push_back(pair.first);
-    }
+    for (const auto &pair : values_) keys.push_back(pair.first);
+
     if (!keys.empty()) {
       std::sort(keys.begin(), keys.end());
+
       std::cerr << "-------\n";
       for (const auto &key : keys) {
-        if (key.find("TableScan") != std::string::npos && key.find("in_mem") == std::string::npos) {
-          continue;
-        }
-        if (key.find("#Tuple") != std::string::npos) {
-          continue;
-        }
+        if (key.find("TableScan") != std::string::npos && key.find("in_mem") == std::string::npos) continue;
+
+        if (key.find("#Tuple") != std::string::npos) continue;
+
         double time = values_.at(key) / double(1e9);
         size_t calling_times = calling_times_.at(key);
         double avg = time / calling_times;
@@ -121,6 +119,7 @@ class BeeProfiler {
         std::cerr << "Total: " << time << " s\tCalls: " << calling_times << "\tAvg: " << avg << " s\t" << key
                   << '\n';
       }
+
       std::cerr << "-------\n";
       for (const auto &key : keys) {
         if (key.find("#Tuple") != std::string::npos) {
