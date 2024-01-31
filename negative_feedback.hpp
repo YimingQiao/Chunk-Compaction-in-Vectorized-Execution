@@ -210,7 +210,7 @@ class CompactTuner {
 
         std::string bandit_name = "0x" + std::to_string(addr) + "\tId-" + std::to_string(id);
         std::cerr << " [PARAMETERS] Compaction Address - " << bandit_name << "\n";
-        bandit->Log2Csv("./" + folder_name + "/" + bandit_name + ".log");
+        // bandit->Log2Csv("./" + folder_name + "/" + bandit_name + ".log");
         bandit->Print(value);
       }
 
