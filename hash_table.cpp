@@ -72,9 +72,8 @@ void ScanStructure::Next(Vector &join_key, DataChunk &input, DataChunk &result, 
     }
 
     // compact result chunks without extra memory copy
-    while (HasNext()) {
+    while (HasNext() && !HasBuffer()) {
       NextInternal(join_key, input, result);
-      if (HasBuffer()) break;
     }
   } else {
     NextInternal(join_key, input, result);
