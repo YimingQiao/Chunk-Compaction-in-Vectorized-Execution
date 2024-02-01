@@ -121,9 +121,7 @@ void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &res
 
   // The last operator: ResultCollector
   if (level == hts.size()) {
-#ifdef flag_collect_tuples
-    result_table.AppendChunk(input);
-#endif
+    if (flag_collect_tuples) result_table.AppendChunk(input);
     return;
   }
 
