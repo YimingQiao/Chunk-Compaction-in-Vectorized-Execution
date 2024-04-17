@@ -1,7 +1,8 @@
 #include "hash_table.h"
 
 namespace compaction {
-HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor, size_t payload_length) {
+HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor, size_t payload_length, vector<AttributeType> &schema)
+    : buffer_(schema) {
   n_buckets_ = 2 * n_rhs_tuples;
   linked_lists_.resize(n_buckets_);
   for (auto &bucket : linked_lists_) bucket = std::make_unique<list<Tuple>>();
@@ -52,7 +53,7 @@ ScanStructure HashTable::Probe(Vector &join_key) {
   for (size_t i = 0; i < join_key.count_; ++i) {
     if (!ptrs[i]->empty()) ptrs_sel_vector[n_non_empty++] = i;
   }
-  auto ret = ScanStructure(n_non_empty, ptrs_sel_vector, ptrs, join_key.selection_vector_, this);
+  auto ret = ScanStructure(n_non_empty, ptrs_sel_vector, ptrs, join_key.selection_vector_, this, &buffer_);
 
   double time = profiler.Elapsed();
   BeeProfiler::Get().InsertStatRecord("[Join - Probe] 0x" + std::to_string(size_t(this)), time);
@@ -105,9 +106,6 @@ void ScanStructure::NextInternal(compaction::Vector &join_key,
       vector<Vector *> cols{&result.data_[input.data_.size()], &result.data_[input.data_.size() + 1]};
       GatherResult(cols, result_vector, result_count);
     } else {
-      // init the buffer
-      if (buffer_ == nullptr) buffer_ = std::make_unique<DataChunk>(result.types_);
-
       // buffer the result
       buffer_->Slice(input, result_vector, result_count);
       vector<Vector *> cols{&buffer_->data_[input.data_.size()], &buffer_->data_[input.data_.size() + 1]};

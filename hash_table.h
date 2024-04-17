@@ -31,9 +31,9 @@ class ScanStructure {
                          vector<uint32_t> bucket_sel_vector,
                          vector<list<Tuple> *> buckets,
                          vector<uint32_t> &key_sel_vector,
-                         HashTable *ht)
+                         HashTable *ht, DataChunk *buffer)
       : count_(count), buckets_(std::move(buckets)),
-        bucket_sel_vector_(std::move(bucket_sel_vector)), key_sel_vector_(key_sel_vector), ht_(ht) {
+        bucket_sel_vector_(std::move(bucket_sel_vector)), key_sel_vector_(key_sel_vector), ht_(ht), buffer_(buffer) {
     iterators_.resize(kBlockSize);
     for (size_t i = 0; i < count; ++i) {
       auto idx = bucket_sel_vector_[i];
@@ -54,7 +54,7 @@ class ScanStructure {
   HashTable *ht_;
 
   // buffer
-  unique_ptr<DataChunk> buffer_;
+  DataChunk *buffer_;
 
   size_t ScanInnerJoin(Vector &join_key, vector<uint32_t> &result_vector);
 
@@ -71,7 +71,7 @@ class ScanStructure {
 
 class HashTable {
  public:
-  HashTable(size_t n_rhs_tuples, size_t chunk_factor, size_t payload_length);
+  HashTable(size_t n_rhs_tuples, size_t chunk_factor, size_t payload_length, vector<AttributeType> &schema);
 
   ScanStructure Probe(Vector &join_key);
 
@@ -79,5 +79,6 @@ class HashTable {
   size_t n_buckets_;
   vector<unique_ptr<list<Tuple>>> linked_lists_;
   std::hash<Attribute> hash_;
+  DataChunk buffer_;
 };
 }

@@ -63,11 +63,11 @@ int main(int argc, char *argv[]) {
   auto &intermediates = state.intermediates;
   auto &compactors = state.compactors;
   for (size_t i = 0; i < kJoins; ++i) {
-    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i]);
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);
     compactors[i] = std::make_unique<NaiveCompactor>(types);
+    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i], types);
   }
 
   // create the result_table collection
