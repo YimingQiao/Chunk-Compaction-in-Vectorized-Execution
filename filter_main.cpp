@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
   DataCollection result_table(types);
 
   // -----------------------------------------------------------------------------------------------------------
+  vector<DataChunk> buffers;
 
   double latency = 0;
   Profiler timer;
@@ -121,12 +122,14 @@ int main(int argc, char *argv[]) {
     do {
       end = std::min(start + num_chunk_size, kTupleSize);
       // num_chunk_size = (num_chunk_size + 1) % kBlockSize;
-      DataChunk chunk = table.FetchChunk(start, end);
+      auto chunk = table.FetchChunk(start, end);
       start = end;
 
       timer.Start();
       ExecutePipeline(chunk, state, result_table, 0);
       latency += timer.Elapsed();
+
+      buffers.push_back(chunk);
     } while (end < kTupleSize);
   }
 
