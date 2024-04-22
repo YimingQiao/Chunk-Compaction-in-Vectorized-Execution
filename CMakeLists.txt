@@ -17,5 +17,12 @@ add_executable(compaction
         data_collection.cpp
         compactor.cpp)
 
+# filter operator
+add_executable(filter filter_main.cpp
+        profiler.h
+        base.cpp
+        data_collection.cpp
+filter_operator.h)
+
 # If you have any libraries, you can link them like this:
 # target_link_libraries(YourProjectName your_library)
