@@ -9,18 +9,25 @@
 
 #pragma once
 
+#include "compactor.h"
+
 // This file contains all parameters used in the project
 namespace compaction {
 
-// query setting
+// join query setting
 size_t kJoins = 4;
 size_t kLHSTupleSize = 2e7;
 size_t kRHSTupleSize = 2e6;
 size_t kChunkFactor = 6;
 vector<size_t> kRHSPayLoadLength{0, 0, 0, 0};
 
-// compaction setting
+// filter setting
+size_t kFilter = 1;
+size_t kTupleSize = 2e7;
+size_t kCols = 10;
+double kSelectivity = 0.2;
 
+// compaction setting
 #ifdef flag_full_compact
 using Compactor = NaiveCompactor;
 const string strategy_name = "full_compaction";
@@ -36,4 +43,7 @@ const string strategy_name = "no_compaction";
 #endif
 
 bool flag_collect_tuples = false;
+
+
+// filter setting
 }
