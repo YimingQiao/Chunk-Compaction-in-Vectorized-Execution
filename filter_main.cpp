@@ -41,7 +41,7 @@ void ParseParameters(int argc, char **argv) {
 
   // show the setting
   std::cerr << "------------------ Setting ------------------\n";
-  std::cerr << "Selection Vector: Multiple\n"
+  std::cerr << "Selection Vector: Multiple\n";
   std::cerr << "Number of Filters: " << kFilter << "\n"
             << "Number of Columns: " << kCols << "\n"
             << "Filter Selectivity: " << kSelectivity << "\n"
