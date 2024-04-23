@@ -1,9 +1,13 @@
 #include "hash_table.h"
 
 namespace compaction {
-HashTable::HashTable(size_t n_rhs_tuples, size_t chunk_factor, size_t payload_length, vector<AttributeType> &schema)
+HashTable::HashTable(size_t n_rhs_tuples,
+                     size_t chunk_factor,
+                     size_t payload_length,
+                     vector<AttributeType> &schema,
+                     double load_factor)
     : buffer_(schema) {
-  n_buckets_ = 2 * n_rhs_tuples;
+  n_buckets_ = size_t(double(n_rhs_tuples) / load_factor);
   linked_lists_.resize(n_buckets_);
   for (auto &bucket : linked_lists_) bucket = std::make_unique<list<Tuple>>();
 
