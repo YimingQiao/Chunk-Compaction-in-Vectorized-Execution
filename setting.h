@@ -19,6 +19,7 @@ size_t kJoins = 4;
 size_t kLHSTupleSize = 2e7;
 size_t kRHSTupleSize = 2e6;
 size_t kChunkFactor = 6;
+double kLoadFactor = 0.5;
 vector<size_t> kRHSPayLoadLength{0, 0, 0, 0};
 
 // filter setting

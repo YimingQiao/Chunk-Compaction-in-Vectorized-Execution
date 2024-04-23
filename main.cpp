@@ -27,7 +27,7 @@ std::vector<size_t> ParseList(const std::string &s);
 
 void ParseParameters(int argc, char *argv[]);
 
-// example: compaction --join-num 4 --chunk-factor 5 --lhs-size 20000000 --rhs-size 2000000 --payload-length=[0,0,0,0]
+// example: compaction --join-num 4 --chunk-factor 5 --lhs-size 20000000 --rhs-size 2000000 --load-factor 0.5 --payload-length=[0,0,0,0]
 int main(int argc, char *argv[]) {
   ParseParameters(argc, argv);
 
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
   auto &intermediates = state.intermediates;
   auto &compactors = state.compactors;
   for (size_t i = 0; i < kJoins; ++i) {
-    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i]);
+    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i], kLoadFactor);
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);
@@ -213,6 +213,11 @@ void ParseParameters(int argc, char **argv) {
           kRHSTupleSize = std::stoi(argv[i + 1]);
           i++;
         }
+      } else if (arg == "--load-factor") {
+        if (i + 1 < argc) {
+          kLoadFactor = std::stod(argv[i + 1]);
+          i++;
+        }
       } else if (arg.substr(0, 16) == "--payload-length") {
         // --payload-length=[0,1000,0,0]
         kRHSPayLoadLength = ParseList(arg.substr(17));
@@ -229,7 +234,8 @@ void ParseParameters(int argc, char **argv) {
             << "Number of Joins: " << kJoins << "\n"
             << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
             << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
-            << "Chunk Factor: " << kChunkFactor << "\n";
+            << "Chunk Factor: " << kChunkFactor << "\n"
+            << "Load Factor: " << kLoadFactor << "\n";
   std::cerr << "RHS Payload Lengths: [";
   for (size_t i = 0; i < kJoins; ++i) {
     if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
