@@ -28,8 +28,6 @@ size_t kTupleSize = 2e7;
 size_t kCols = 10;
 double kSelectivity = 0.2;
 
-#define flag_dynamic_compact
-
 // compaction setting
 #ifdef flag_full_compact
 using Compactor = NaiveCompactor;
