@@ -44,7 +44,7 @@ using Compactor = NaiveCompactor;
 const string strategy_name = "no_compaction";
 #endif
 
-bool flag_collect_tuples = true;
+bool flag_collect_tuples = false;
 
 
 // filter setting
