@@ -21,6 +21,10 @@ void NaiveCompactor::Compact(unique_ptr<DataChunk> &chunk) {
   cached_chunk_->Append(*chunk, n_move);
   temp_chunk_->Append(*chunk, chunk->count_ - n_move, n_move);
 
+  double time = profiler_.Elapsed();
+  BeeProfiler::Get().InsertStatRecord(name_, time);
+  ZebraProfiler::Get().InsertRecord(name_, chunk->count_, time);
+
   profiler_.Start();
   // swap
   chunk.swap(cached_chunk_);
@@ -28,7 +32,7 @@ void NaiveCompactor::Compact(unique_ptr<DataChunk> &chunk) {
   // temp_chunk_->Reset();
   temp_chunk_ = std::make_unique<DataChunk>(chunk->types_);
 
-  double time = profiler_.Elapsed();
+  time = profiler_.Elapsed();
   BeeProfiler::Get().InsertStatRecord(name_, time);
   ZebraProfiler::Get().InsertRecord(name_, chunk->count_, time);
 }

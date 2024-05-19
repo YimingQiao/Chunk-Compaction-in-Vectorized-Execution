@@ -130,7 +130,7 @@ class MultiArmedBandit {
   // init
   size_t kArms_;
   double kEpsilon = 0.1;
-  size_t kStartSampling = 4;
+  size_t kStartSampling = 12;
 
  private:
   // stats
@@ -151,7 +151,7 @@ class MultiArmedBandit {
 
  private:
   // logging
-  size_t kHeart = 256;
+  size_t kHeart = 2048;
   struct Record {
     std::vector<double> his_rewards_;
     std::vector<size_t> his_select_;
