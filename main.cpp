@@ -217,7 +217,8 @@ void ParseParameters(int argc, char **argv) {
             << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
             << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
             << "Chunk Factor: " << kChunkFactor << "\n"
-            << "Load Factor: " << kLoadFactor << "\n";
+            << "Load Factor: " << kLoadFactor << "\n"
+            << "Cardinality Factor: " << kCardinalityFactor << "\n";
   std::cerr << "RHS Payload Lengths: [";
   for (size_t i = 0; i < kJoins; ++i) {
     if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
