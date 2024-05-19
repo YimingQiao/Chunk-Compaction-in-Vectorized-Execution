@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     for (size_t j = 0; j < kJoins; ++j) tuple[j] = size_t(dist(gen));
 
     // modify the relation cardinality of the first operator output
-    tuple[0] = std::get<size_t>(tuple[0]) * kCardinalityRatio;
+    tuple[0] = std::get<size_t>(tuple[0]) * kCardinalityFactor;
 
     table.AppendTuple(tuple);
   }
@@ -227,7 +227,7 @@ void ParseParameters(int argc, char **argv) {
         kRHSPayLoadLength = ParseList(arg.substr(17));
       } else if (arg == "--cardinality-ratio") {
         if (i + 1 < argc) {
-          kCardinalityRatio = std::stoi(argv[i + 1]);
+          kCardinalityFactor = std::stoi(argv[i + 1]);
           i++;
         }
       }
@@ -244,7 +244,8 @@ void ParseParameters(int argc, char **argv) {
             << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
             << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
             << "Chunk Factor: " << kChunkFactor << "\n"
-            << "Load Factor: " << kLoadFactor << "\n";
+            << "Load Factor: " << kLoadFactor << "\n"
+            << "Cardinality Factor: " << kCardinalityFactor << "\n";
   std::cerr << "RHS Payload Lengths: [";
   for (size_t i = 0; i < kJoins; ++i) {
     if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
