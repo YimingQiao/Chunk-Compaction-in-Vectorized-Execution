@@ -24,5 +24,15 @@ add_executable(filter filter_main.cpp
         data_collection.cpp
 filter_operator.h)
 
+# a pipeline starts with a filter operator.
+add_executable(start_with_filter
+        start_with_filter_main.cpp
+        profiler.h
+        base.cpp
+        hash_table.cpp
+        compactor.cpp
+        data_collection.cpp
+        filter_operator.h)
+
 # If you have any libraries, you can link them like this:
 # target_link_libraries(YourProjectName your_library)
