@@ -19,9 +19,8 @@ size_t kJoins = 4;
 vector<size_t> kRHSPayLoadLength{0, 1000, 0, 0};
 size_t kLHSTupleSize = 2e7;
 size_t kRHSTupleSize = 2e6;
-size_t kChunkFactor = 1;
+size_t kChunkFactor = 8;
 double kLoadFactor = 0.5;
-size_t kCardinalityFactor = 1; // the relation cardinality of the FIRST operator output only
 
 // filter setting
 size_t kFilter = 1;
