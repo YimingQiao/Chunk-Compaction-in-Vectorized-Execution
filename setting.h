@@ -21,13 +21,13 @@ size_t kLHSTupleSize = 2e7;
 size_t kRHSTupleSize = 2e6;
 size_t kChunkFactor = 1;
 double kLoadFactor = 0.5;
+size_t kCardinalityFactor = 1; // the relation cardinality of the FIRST operator output only
 
 // filter setting
 size_t kFilter = 1;
 size_t kTupleSize = 2e7;
 size_t kCols = 10;
 double kSelectivity = 0.2;
-
 
 constexpr bool kEnableLogicalCompact = true;
 
