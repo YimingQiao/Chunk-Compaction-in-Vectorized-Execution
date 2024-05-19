@@ -50,15 +50,15 @@ void ParseParameters(int argc, char **argv) {
 
 struct PipelineState {
   vector<unique_ptr<DataChunk>> intermediates;
-  vector<unique_ptr<FilterOperator>> filters_;
+  vector<unique_ptr<FilterOperator>> filters;
 
-  explicit PipelineState(size_t num_operator) : filters_(num_operator), intermediates(num_operator) {}
+  explicit PipelineState(size_t num_operator) : filters(num_operator), intermediates(num_operator) {}
 };
 
 void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &result_table, size_t level) {
   if (input.count_ == 0) return;
 
-  auto &filters = state.filters_;
+  auto &filters = state.filters;
   auto &intermediates = state.intermediates;
 
   // The last operator: ResultCollector
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
   // create filter operator: selectivity.
   PipelineState state(kFilter);
-  auto &filters = state.filters_;
+  auto &filters = state.filters;
   auto &intermediates = state.intermediates;
   for (size_t i = 0; i < kFilter; ++i) {
     filters[i] = std::make_unique<FilterOperator>(kSelectivity);

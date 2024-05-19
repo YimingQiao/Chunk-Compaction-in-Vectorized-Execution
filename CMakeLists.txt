@@ -27,12 +27,29 @@ else ()
 endif ()
 
 # compaction of the vectorized hash join
-add_executable(compaction main.cpp profiler.h base.cpp hash_table.cpp data_collection.cpp compactor.cpp)
-
-# filter operator
-add_executable(filter filter_main.cpp
+add_executable(compaction
+        main.cpp
         profiler.h
         base.cpp
+        hash_table.cpp
+        data_collection.cpp
+        compactor.cpp)
+
+# filter operator
+add_executable(filter
+        filter_main.cpp
+        profiler.h
+        base.cpp
+        data_collection.cpp
+        filter_operator.h)
+
+# a pipeline starts with a filter operator.
+add_executable(start_with_filter
+        start_with_filter_main.cpp
+        profiler.h
+        base.cpp
+        hash_table.cpp
+        compactor.cpp
         data_collection.cpp
         filter_operator.h)
 
