@@ -18,8 +18,9 @@ namespace compaction {
 size_t kJoins = 4;
 size_t kLHSTupleSize = 2e7;
 size_t kRHSTupleSize = 2e6;
-size_t kChunkFactor = 6;
+size_t kChunkFactor = 1;
 double kLoadFactor = 0.5;
+size_t kCardinalityRatio = 1; // the relation cardinality of the FIRST operator output only
 vector<size_t> kRHSPayLoadLength{0, 0, 0, 0};
 
 // filter setting
@@ -43,7 +44,7 @@ using Compactor = NaiveCompactor;
 const string strategy_name = "no_compaction";
 #endif
 
-bool flag_collect_tuples = false;
+bool flag_collect_tuples = true;
 
 
 // filter setting

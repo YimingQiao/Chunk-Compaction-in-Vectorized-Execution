@@ -47,6 +47,10 @@ int main(int argc, char *argv[]) {
   tuple[kJoins] = "|";
   for (size_t i = 0; i < kLHSTupleSize; ++i) {
     for (size_t j = 0; j < kJoins; ++j) tuple[j] = size_t(dist(gen));
+
+    // modify the relation cardinality of the first operator output
+    tuple[0] = std::get<size_t>(tuple[0]) * kCardinalityRatio;
+
     table.AppendTuple(tuple);
   }
 
@@ -221,6 +225,11 @@ void ParseParameters(int argc, char **argv) {
       } else if (arg.substr(0, 16) == "--payload-length") {
         // --payload-length=[0,1000,0,0]
         kRHSPayLoadLength = ParseList(arg.substr(17));
+      } else if (arg == "--cardinality-ratio") {
+        if (i + 1 < argc) {
+          kCardinalityRatio = std::stoi(argv[i + 1]);
+          i++;
+        }
       }
     }
 
