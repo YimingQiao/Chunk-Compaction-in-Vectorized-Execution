@@ -9,6 +9,8 @@ It implements several compaction strategies, including
  - Binary Compaction
  - Dynamic/Learning Compaction
 
+The code for the Logical Compaction is provided in the other branch.
+
 We provide a compile script that can generate the executable file using each of the strategies
 
     bash ./build_versions.sh
@@ -17,13 +19,13 @@ The generated executable files are placed in the folder `compaction`.
 
     Usage: [program_name] [options]
     Options:
-    --join-num [value]        Number of joins
-    --chunk-factor [value]    Chunk factor
-    --lhs-size [value]        Size of LHS tuples
-    --rhs-size [value]        Size of RHS tuples
-    --load-factor [value]     Load factor
-    --payload-length=[list]   Comma-separated list of payload lengths for RHS   
-                                Example: --payload-length=0,1000,0,0
+        --join-num [value]        Number of joins
+        --chunk-factor [value]    Chunk factor
+        --lhs-size [value]        Size of LHS tuples
+        --rhs-size [value]        Size of RHS tuples
+        --load-factor [value]     Load factor
+        --payload-length=[list]   Comma-separated list of payload lengths for RHS   
+                                    Example: --payload-length=0,1000,0,0
 
 ## Example:
 
