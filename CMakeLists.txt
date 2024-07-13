@@ -36,12 +36,12 @@ add_executable(compaction
         compactor.cpp)
 
 # filter operator
-add_executable(filter
-        filter_main.cpp
-        profiler.h
-        base.cpp
-        data_collection.cpp
-        filter_operator.h)
+#add_executable(filter
+#        filter_main.cpp
+#        profiler.h
+#        base.cpp
+#        data_collection.cpp
+#        filter_operator.h)
 
 # a pipeline starts with a filter operator.
 add_executable(start_with_filter
