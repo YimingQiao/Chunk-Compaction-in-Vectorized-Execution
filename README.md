@@ -16,13 +16,13 @@ The generated executable files are placed in the folder `compaction`.
 
     Usage: [program_name] [options]
     Options:
-    --join-num [value]        Number of joins
-    --chunk-factor [value]    Chunk factor
-    --lhs-size [value]        Size of LHS tuples
-    --rhs-size [value]        Size of RHS tuples
-    --load-factor [value]     Load factor
-    --payload-length=[list]   Comma-separated list of payload lengths for RHS   
-                                Example: --payload-length=0,1000,0,0
+        --join-num [value]        Number of joins
+        --chunk-factor [value]    Chunk factor
+        --lhs-size [value]        Size of LHS tuples
+        --rhs-size [value]        Size of RHS tuples
+        --load-factor [value]     Load factor
+        --payload-length=[list]   Comma-separated list of payload lengths for RHS   
+                                    Example: --payload-length=0,1000,0,0
 
 ## Example:
 
