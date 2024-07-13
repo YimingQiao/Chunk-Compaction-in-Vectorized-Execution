@@ -9,6 +9,8 @@ It implements several compaction strategies, including
  - Binary Compaction
  - Dynamic/Learning Compaction
 
+The code for the Logical Compaction is provided in the other branch.
+
 We provide a compile script that can generate the executable file using each of the strategies
 
     bash ./build_versions.sh
