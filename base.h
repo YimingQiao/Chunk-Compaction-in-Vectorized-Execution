@@ -27,7 +27,7 @@ using std::unordered_map;
 using std::string;
 using idx_t = size_t;
 
-constexpr size_t kBlockSize = 2048;
+static size_t kBlockSize = 2048;
 
 // Attribute includes three types: integer, float-point number, and the string.
 using Attribute = std::variant<size_t, double, std::string>;
