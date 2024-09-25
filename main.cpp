@@ -211,10 +211,10 @@ int ParseParameters(int argc, char **argv) {
         // --payload-length=[0,1000,0,0]
         kRHSPayLoadLength = ParseList(arg.substr(17));
       }
-
-      if (kJoins != kRHSPayLoadLength.size())
-        throw std::runtime_error("Payload vector length must equal to the number of joins.");
     }
+
+    if (kJoins != kRHSPayLoadLength.size())
+      throw std::runtime_error("Payload vector length must equal to the number of joins.");
   } else {
     PrintHelp();
     return 1;
