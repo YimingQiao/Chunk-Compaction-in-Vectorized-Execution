@@ -1,4 +1,11 @@
-# Data Chunk Compaction in the Vectorized Execution
+# Data Chunk Compaction in Vectorized Execution
+
+The Supplementary Material of our paper includes three repositories:
+1. [Problem formalization and simulation](https://github.com/YimingQiao/Chunk-Compaction-Formalization)
+2. **Some Microbenchmarks to compare various compaction strategies (Current Repository)**
+3. [Integrate the Leaning and Logical Compaction into the Duckdb, evaluting the End-to-end performance](https://github.com/YimingQiao/Chunk-Compaction-in-Duckdb)
+
+---
 
 This repository contains code that we use in the microbenchmark section of the paper. 
 It includes a vectorized execution engine which supports the hash join and the filter operators. 
