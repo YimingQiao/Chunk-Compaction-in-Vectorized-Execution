@@ -168,6 +168,7 @@ void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size
 void PrintHelp() {
   std::cerr << "Usage: [program_name] [options]\n";
   std::cerr << "Options:\n";
+  std::cerr << "  --block-size [value]      Default Block Size\n";
   std::cerr << "  --join-num [value]        Number of joins\n";
   std::cerr << "  --chunk-factor [value]    Chunk factor\n";
   std::cerr << "  --lhs-size [value]        Size of LHS tuples\n";
@@ -182,7 +183,12 @@ int ParseParameters(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
       std::string arg(argv[i]);
 
-      if (arg == "--join-num") {
+      if (arg == "--block-size") {
+        if (i + 1 < argc) {
+          kBlockSize = std::stoi(argv[i + 1]);
+          i++;
+        }
+      } else if (arg == "--join-num") {
         if (i + 1 < argc) {
           kJoins = std::stoi(argv[i + 1]);
           i++;
@@ -223,11 +229,13 @@ int ParseParameters(int argc, char **argv) {
   std::cerr << "------------------ Setting ------------------\n";
   if (kEnableLogicalCompact) std::cerr << "Strategy: logical_compaction\n";
   else std::cerr << "Compaction Strategy: no_compaction\n";
-  std::cerr << "Number of Joins: " << kJoins << "\n"
-            << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
-            << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
-            << "Chunk Factor: " << kChunkFactor << "\n"
-            << "Load Factor: " << kLoadFactor << "\n";
+  std::cerr
+      << "Size of Block: " << kBlockSize << "\n"
+      << "Number of Joins: " << kJoins << "\n"
+      << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
+      << "Number of RHS Tuple: " << kRHSTupleSize << "\n"
+      << "Chunk Factor: " << kChunkFactor << "\n"
+      << "Load Factor: " << kLoadFactor << "\n";
   std::cerr << "RHS Payload Lengths: [";
   for (size_t i = 0; i < kJoins; ++i) {
     if (i != kJoins - 1) std::cerr << kRHSPayLoadLength[i] << ",";
