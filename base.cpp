@@ -2,6 +2,8 @@
 
 namespace compaction {
 
+size_t kBlockSize = 2048;
+
 void Vector::Reference(Vector &other) {
   assert(type_ == other.type_);
   data_ = other.data_;
