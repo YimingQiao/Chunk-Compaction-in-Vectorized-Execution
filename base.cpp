@@ -2,6 +2,8 @@
 
 namespace compaction {
 
+size_t kBlockSize = 2048;
+
 void Vector::Append(Vector &other, size_t num, size_t offset) {
   assert(count_ + num <= kBlockSize);
   // current selection vector = [0, 1, 2, ..., count_ - 1]

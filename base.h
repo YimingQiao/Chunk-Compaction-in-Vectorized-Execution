@@ -26,7 +26,7 @@ using std::unique_ptr;
 using std::unordered_map;
 using std::string;
 
-static size_t kBlockSize = 2048;
+extern size_t kBlockSize;
 
 // Attribute includes three types: integer, float-point number, and the string.
 using Attribute = std::variant<size_t, double, std::string>;
