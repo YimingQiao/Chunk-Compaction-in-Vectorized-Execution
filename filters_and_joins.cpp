@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);
     compactors[i] = std::make_unique<NaiveCompactor>(types);
-    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i], types, kLoadFactor);
+    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i - 1], types, kLoadFactor);
   }
 
   // create the result_table collection
