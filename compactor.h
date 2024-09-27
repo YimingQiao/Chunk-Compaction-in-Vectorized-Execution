@@ -37,7 +37,8 @@ class NaiveCompactor {
 class BinaryCompactor {
  public:
   explicit BinaryCompactor(const vector<AttributeType> &types)
-      : cached_chunk_(std::make_unique<DataChunk>(types)),
+      : kCompactThreshold(std::min(size_t(128), kBlockSize)),
+        cached_chunk_(std::make_unique<DataChunk>(types)),
         name_("[Binary Compact] 0x" + std::to_string(size_t(this))) {}
 
   void Compact(unique_ptr<DataChunk> &chunk);
@@ -47,7 +48,7 @@ class BinaryCompactor {
   }
 
  private:
-  size_t kCompactThreshold = 128;
+  size_t kCompactThreshold;
   unique_ptr<DataChunk> cached_chunk_;
 
   const string name_;
