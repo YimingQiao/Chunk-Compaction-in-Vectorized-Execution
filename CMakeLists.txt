@@ -25,8 +25,8 @@ add_executable(filter filter_main.cpp
 filter_operator.h)
 
 # a pipeline starts with a filter operator.
-add_executable(start_with_filter
-        start_with_filter_main.cpp
+add_executable(filter_and_join
+        filters_and_joins.cpp
         profiler.h
         base.cpp
         hash_table.cpp
