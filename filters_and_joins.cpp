@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   intermediates[0] = std::make_unique<DataChunk>(types);
   compactors[0] = std::make_unique<Compactor>(types);
   for (size_t i = 1; i < n_operator; ++i) {
-    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i], kLoadFactor);
+    hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i - 1], kLoadFactor);
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);
