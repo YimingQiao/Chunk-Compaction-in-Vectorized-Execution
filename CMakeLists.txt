@@ -9,6 +9,20 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()
 
+# add options for each compaction setting
+option(USE_LOGICAL_COMPACT "Use logical compact method" OFF)
+option(USE_SMART_COMPACT "Use logical and dynamic compact method" OFF)
+
+# check which compaction method was chosen
+if (USE_LOGICAL_COMPACT)
+    add_definitions(-Dflag_no_compact)
+elseif (USE_SMART_COMPACT)
+    add_definitions(-Dflag_dynamic_compact)
+else ()
+    # default to logical_compact
+    add_definitions(-Dflag_no_compact)
+endif ()
+
 add_executable(compaction
         main.cpp
         profiler.h
