@@ -10,13 +10,13 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 # add options for each compaction setting
-option(USE_LOGICAL_COMPACT "Use logical compact method" OFF)
-option(USE_SMART_COMPACT "Use logical and dynamic compact method" OFF)
+option(USE_NO_COMPACT "Use Logical + No compact method" OFF)
+option(USE_DYNAMIC_COMPACT "Use logical + dynamic compact method" OFF)
 
 # check which compaction method was chosen
-if (USE_LOGICAL_COMPACT)
+if (USE_NO_COMPACT)
     add_definitions(-Dflag_no_compact)
-elseif (USE_SMART_COMPACT)
+elseif (USE_DYNAMIC_COMPACT)
     add_definitions(-Dflag_dynamic_compact)
 else ()
     # default to logical_compact

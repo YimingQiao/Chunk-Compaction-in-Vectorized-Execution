@@ -6,8 +6,8 @@ mkdir -p filter_and_join
 
 # Dictionary of all compaction options
 declare -A compaction_options=(
-    ["logical"]="USE_LOGICAL_COMPACT"
-    ["smart"]="USE_SMART_COMPACT")
+    ["logical"]="USE_NO_COMPACT"
+    ["smart"]="USE_DYNAMIC_COMPACT")
 
 # Project name - replace with your executable name
 executables=("filter_and_join" "compaction")
