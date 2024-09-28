@@ -38,7 +38,7 @@ using Compactor = DynamicCompactor;
 const string strategy_name = "dynamic_compaction";
 #else
 using Compactor = NaiveCompactor;
-const string strategy_name = "";
+const string strategy_name = "no_compaction";
 #endif
 
 constexpr bool kEnableLogicalCompact = true;
