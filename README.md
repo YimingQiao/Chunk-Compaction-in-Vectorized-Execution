@@ -29,7 +29,7 @@ The generated executable files are placed in the folder `compaction`.
         --rhs-size [value]        Size of RHS tuples
         --load-factor [value]     Load factor
         --payload-length=[list]   Comma-separated list of payload lengths for RHS   
-                                    Example: --payload-length=0,1000,0,0
+                                    Example: --payload-length=[0,1000,0,0]
 
 ## Example:
 
