@@ -30,7 +30,10 @@ double kSelectivity = 0.2;
 
 // #define flag_dynamic_compact
 
-#if defined(flag_full_compact)
+#if defined(flag_no_compact)
+using Compactor = NaiveCompactor;
+const string strategy_name = "no_compaction";
+#elif defined(flag_full_compact)
 using Compactor = NaiveCompactor;
 const string strategy_name = "full_compaction";
 #elif defined(flag_dynamic_compact)
