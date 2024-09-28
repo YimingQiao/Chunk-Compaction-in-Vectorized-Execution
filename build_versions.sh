@@ -4,17 +4,20 @@
 mkdir -p compaction
 
 # Project name - replace with your executable name
-project_name="compaction"
+executables=("filter_and_join" "compaction")
 
-# Build the no_compact version
-mkdir -p build-logical
-cd build-logical
-# Generate make files with all compaction options off (falls back to no-compact)
-cmake ..
-# Build the project
-make -j96
-# Move the project
-mv ${project_name} ../compaction/exe_logical_${project_name}
-# Return to parent directory
-cd ..
-rm -rf build-logical
+for name in "${executables[@]}"; do
+    # Build the no_compact version
+    mkdir -p build-logical
+    cd build-logical
+    # Generate make files with all compaction options off (falls back to no-compact)
+    cmake ..
+    # Build the project
+    make -j96
+    # Move the project
+    mv ${name} ../${name}/exe_logical_${name}
+    # Return to parent directory
+    cd ..
+    rm -rf build-logical
+done
+
