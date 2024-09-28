@@ -16,7 +16,7 @@ struct PipelineState {
   vector<unique_ptr<FilterOperator>> filters;
   vector<unique_ptr<HashTable>> hts;
   vector<unique_ptr<DataChunk>> intermediates;
-  vector<unique_ptr<NaiveCompactor>> compactors;
+  vector<unique_ptr<Compactor>> compactors;
 
   explicit PipelineState(size_t n_operator)
       : filters(n_operator), hts(n_operator), intermediates(n_operator), compactors(n_operator) {}
@@ -65,16 +65,21 @@ int main(int argc, char *argv[]) {
 
   filters[0] = std::make_unique<FilterOperator>(kSelectivity);
   intermediates[0] = std::make_unique<DataChunk>(types);
+  compactors[0] = std::make_unique<Compactor>(types);
   for (size_t i = 1; i < n_operator; ++i) {
     types.push_back(AttributeType::INTEGER);
     types.push_back(AttributeType::STRING);
     intermediates[i] = std::make_unique<DataChunk>(types);
-    compactors[i] = std::make_unique<NaiveCompactor>(types);
+    compactors[i] = std::make_unique<Compactor>(types);
     hts[i] = std::make_unique<HashTable>(kRHSTupleSize, kChunkFactor, kRHSPayLoadLength[i - 1], types, kLoadFactor);
   }
 
   // create the result_table collection
   DataCollection result_table(types);
+#ifdef flag_dynamic_compact
+  // create MAB for each join operator
+  for (size_t i = 0; i < n_operator; ++i) CompactTuner::Get().Initialize(size_t(&state.compactors[i]));
+#endif
 
   // -----------------------------------------------------------------------------------------------------------
 
@@ -96,10 +101,9 @@ int main(int argc, char *argv[]) {
       latency += timer.Elapsed();
     } while (end < kLHSTupleSize);
 
-#ifdef flag_full_compact
+#if defined(flag_full_compact) || defined(flag_dynamic_compact)
     timer.Start();
     {
-      // Flush the tuples in cache.
       FlushPipelineCache(state, result_table, 0);
     }
     latency += timer.Elapsed();
@@ -133,16 +137,30 @@ void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &res
   auto &compactor = state.compactors[level];
   auto &filter = state.filters[level];
 
+#ifdef flag_dynamic_compact
+  // ---------------------------------- learn compaction thresholds -------------------------------------
+  Profiler profiler;
+  profiler.Start();
+  // 1. Get a compaction threshold
+  // 2. Start to record execution time
+  size_t threshold = CompactTuner::Get().SelectArm(level);
+  compactor->SetThreshold(threshold);
+
+  BeeProfiler::Get().InsertStatRecord("[UCB Get Thresholds]", profiler.Elapsed());
+
+  profiler.Start();
+  // -----------------------------------------------------------------------------------------------------
+#endif
+
   if (ht != nullptr) {
     // hash join
     auto ss = ht->Probe(join_key);
     while (ss.HasNext()) {
       ss.Next(join_key, input, *result, kEnableLogicalCompact);
 
-#ifdef flag_full_compact
+#if defined(flag_full_compact) || defined(flag_dynamic_compact)
       // A compactor sits here.
-    compactor->Compact(result);
-    if (result->count_ == 0) continue;
+      compactor->Compact(result);
 #endif
 
       if (result->count_ != 0) ExecutePipeline(*result, state, result_table, level + 1);
@@ -151,14 +169,22 @@ void ExecutePipeline(DataChunk &input, PipelineState &state, DataCollection &res
     // filter
     filter->Execute(input, level, *result);
 
-#ifdef flag_full_compact
+#if defined(flag_full_compact) || defined(flag_dynamic_compact)
     // A compactor sits here.
     compactor->Compact(result);
-    if (result->count_ == 0) continue;
 #endif
 
     if (result->count_ != 0) ExecutePipeline(*result, state, result_table, level + 1);
   }
+
+#ifdef flag_dynamic_compact
+  // ---------------------------------- learn compaction thresholds -------------------------------------
+  double time = profiler.Elapsed();
+  profiler.Start();
+  CompactTuner::Get().UpdateArm(level, compactor->GetThreshold(), 2 / time / 1e3);
+  BeeProfiler::Get().InsertStatRecord("[UCB Update]", profiler.Elapsed());
+  // -----------------------------------------------------------------------------------------------------
+#endif
 }
 
 void FlushPipelineCache(PipelineState &state, DataCollection &result_table, size_t level) {
@@ -228,8 +254,8 @@ void ParseParameters(int argc, char **argv) {
 
   // show the setting
   std::cerr << "------------------ Setting ------------------\n";
-  if (kEnableLogicalCompact) std::cerr << "Strategy: logical_compaction\n";
-  else std::cerr << "Compaction Strategy: no_compaction\n";
+  if (kEnableLogicalCompact) std::cerr << "Strategy: logical_compaction + " << strategy_name <<  "\n";
+  else std::cerr << "Strategy: " << strategy_name << "\n";
   std::cerr << "Number of Joins: " << kJoins << "\n"
             << "Number of LHS Tuple: " << kLHSTupleSize << "\n"
             << "Number of RHS Tuple: " << kRHSTupleSize << "\n"

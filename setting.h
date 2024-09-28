@@ -28,9 +28,17 @@ size_t kTupleSize = 2e7;
 size_t kCols = 10;
 double kSelectivity = 0.2;
 
-#ifdef defined(flag_dynamic_compact)
+// #define flag_dynamic_compact
+
+#if defined(flag_full_compact)
+using Compactor = NaiveCompactor;
+const string strategy_name = "full_compaction";
+#elif defined(flag_dynamic_compact)
 using Compactor = DynamicCompactor;
 const string strategy_name = "dynamic_compaction";
+#else
+using Compactor = NaiveCompactor;
+const string strategy_name = "";
 #endif
 
 constexpr bool kEnableLogicalCompact = true;
