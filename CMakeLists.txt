@@ -32,7 +32,8 @@ add_executable(filter_and_join
         hash_table.cpp
         compactor.cpp
         data_collection.cpp
-        filter_operator.h)
+        filter_operator.h
+        negative_feedback.hpp)
 
 # If you have any libraries, you can link them like this:
 # target_link_libraries(YourProjectName your_library)

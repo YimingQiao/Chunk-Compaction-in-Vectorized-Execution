@@ -25,6 +25,7 @@ using std::shared_ptr;
 using std::unique_ptr;
 using std::unordered_map;
 using std::string;
+using idx_t = size_t;
 
 extern size_t kBlockSize;
 
