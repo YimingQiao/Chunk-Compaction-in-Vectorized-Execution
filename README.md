@@ -3,7 +3,7 @@
 The Supplementary Material of our paper includes three repositories:
 1. [Problem formalization and simulation](https://github.com/YimingQiao/Chunk-Compaction-Formalization)
 2. **Some Microbenchmarks to compare various compaction strategies (Current Repository)**
-3. [Integrate the Leaning and Logical Compaction into the Duckdb, evaluating the End-to-end performance](https://github.com/YimingQiao/duckdb/tree/logical_cpt)
+3. [Integrate the Leaning and Logical Compaction into the Duckdb, evaluating the End-to-end performance](https://github.com/YimingQiao/Data-Chunk-Compaction-in-Duckdb)
 
 **Updates: The implementation of Logical Compaction has been successfully [merged into DuckDB](https://github.com/duckdb/duckdb/pull/14956)!**
 
